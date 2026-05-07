@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "PowerShell(cd \"C:\\\\Users\\\\jungle\\\\Desktop\\\\project\\\\epic poc interact\\\\Assets\"; Get-ChildItem -Recurse | Sort-Object -Property FullName | Format-Table -Property @{Name=\"Path\"; Expression={$_.FullName.Replace\\(\"C:\\\\Users\\\\jungle\\\\Desktop\\\\project\\\\epic poc interact\\\\Assets\\\\\", \"\"\\).Replace\\(\"\\\\\", \"/\"\\)}} -AutoSize | Out-String -Width 200)"
+    ]
+  }
+}
