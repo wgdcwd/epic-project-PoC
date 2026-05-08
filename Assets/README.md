@@ -1693,3 +1693,154 @@ Threat / Wealth 계산 및 반영
 
 > 이 게임의 핵심은 전투에서 이기는 것이 아니라,  
 > 사람을 만나고, 읽고, 믿고, 의심하며 생존하는 것이다.
+
+---
+
+# 21. 코드 아키텍처
+
+## 21-1. 계층 구조
+
+```text
+Core          : 게임 상태, 파티 목록, 전리품 분배
+Characters    : 플레이어, 동료, 적, 비동료 NPC
+Equipment     : 장비 데이터, 인벤토리 슬롯
+Systems       : 정산, 영입, 상호작용 감지, 기력
+Reactions     : 로그, 말풍선
+UI            : HUD, 메뉴, 로그 패널
+```
+
+상위 계층이 하위 계층에 의존하지 않는다. UI는 이벤트를 구독해 갱신하며 게임 오브젝트를 직접 참조하지 않는다.
+
+---
+
+## 21-2. 클래스 계층
+
+```text
+CharacterBase (abstract MonoBehaviour)
+  ├── PlayerCharacter
+  ├── NPCCharacter (abstract)
+  │     ├── CompanionCharacter
+  │     └── WandererCharacter
+  └── EnemyCharacter
+
+공통 컴포넌트 (composition)
+  ├── HealthComponent  - HP 관리, 피격/사망 이벤트 (Player/NPC/Enemy 모두 사용)
+  ├── Shooter          - 투사체 발사, 쿨타임, 대상 레이어 마스크
+  └── StaminaSystem    - 기력 감소/상태 관리 (NPCStats/PlayerStats만 사용)
+
+EnemyCharacter는 NPCStats(Trust/Greed/Fear/Morality)가 필요하지 않으므로
+NPCCharacter가 아닌 CharacterBase를 직접 상속한다.
+```
+
+---
+
+## 21-3. 주요 설계 패턴
+
+### 이벤트 기반 느슨한 결합
+
+```text
+데이터 모델 (Stats) → C# event 발행
+UI (View)           → event 구독하여 갱신
+```
+
+게임 오브젝트 간 직접 참조를 최소화하여 컴포넌트 교체가 용이하다.
+
+### 순수 C# 시스템
+
+```text
+SettlementSystem    - 정산 Trust 변화 계산 (static class)
+RecruitmentSystem   - 영입 점수 계산 (static class)
+LootSystem          - 전리품 분배 (static class)
+```
+
+MonoBehaviour 없이 순수 계산만 담당하며 테스트하기 쉽다.
+
+### 싱글톤 (씬 단위)
+
+```text
+GameManager, PartyRoster, LogManager, BubbleManager
+```
+
+Awake에서 Instance를 자신으로 설정한다. DontDestroyOnLoad는 사용하지 않는다 (단일 씬 PoC).
+
+---
+
+## 21-4. Unity Layer 설정 (에디터에서 수동 설정 필요)
+
+```text
+Layer 6 : Player
+Layer 7 : Companion
+Layer 8 : Enemy
+Layer 9 : WandererNPC
+```
+
+투사체 충돌 레이어 마스크:
+
+```text
+PlayerProjectile    → Companion, Enemy, WandererNPC
+CompanionProjectile → Enemy  (배신 시: Player, Enemy)
+EnemyProjectile     → Player, Companion
+```
+
+---
+
+## 21-5. 스크립트 폴더 구조
+
+```text
+02. Scripts/
+├── Core/
+│   ├── GameManager.cs
+│   ├── PartyRoster.cs
+│   ├── LootSystem.cs
+│   └── Layers.cs
+├── Characters/
+│   ├── HealthComponent.cs
+│   ├── CharacterBase.cs
+│   ├── Shooter.cs
+│   ├── Projectile.cs
+│   ├── StaminaSystem.cs
+│   ├── Player/
+│   │   ├── PlayerCharacter.cs
+│   │   ├── PlayerStats.cs
+│   │   ├── PlayerInputHandler.cs
+│   │   ├── PlayerMovement.cs
+│   │   └── PlayerInventory.cs
+│   └── NPC/
+│       ├── NPCStats.cs
+│       ├── NPCCharacter.cs
+│       ├── NPCInventory.cs
+│       ├── Companion/
+│       │   ├── CompanionCharacter.cs
+│       │   ├── CompanionBrain.cs
+│       │   ├── CompanionRelationship.cs
+│       │   └── CompanionReaction.cs
+│       ├── Wanderer/
+│       │   └── WandererCharacter.cs
+│       └── Enemy/
+│           ├── EnemyCharacter.cs
+│           └── EnemyBrain.cs
+├── Equipment/
+│   ├── EquipmentData.cs
+│   └── EquipmentSlots.cs
+├── Systems/
+│   ├── SettlementSystem.cs
+│   ├── RecruitmentSystem.cs
+│   └── InteractionDetector.cs
+├── Reactions/
+│   ├── LogManager.cs
+│   ├── BubbleManager.cs
+│   └── SpeechBubble.cs
+└── UI/
+    ├── GameOverScreen.cs
+    ├── HUD/
+    │   ├── PlayerHUDView.cs
+    │   ├── CompanionCardView.cs
+    │   └── PartyPanelView.cs
+    ├── Menus/
+    │   ├── InteractionMenuView.cs
+    │   ├── CompanionManagementView.cs
+    │   ├── SettlementView.cs
+    │   └── InventoryView.cs
+    └── Log/
+        └── SituationLogView.cs
+```
