@@ -25,6 +25,13 @@ public sealed class EnemyBrain : MonoBehaviour
         _shooter.SetOwner(ProjectileOwner.Enemy);
     }
 
+    /// <summary>외부에서 강제로 aggro 모드 진입. 기습 등 detection 무시하고 즉시 추적.</summary>
+    public void EnterAggroMode(Transform target = null)
+    {
+        _isAggro = true;
+        if (target != null) _target = target;
+    }
+
     void FixedUpdate()
     {
         if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;

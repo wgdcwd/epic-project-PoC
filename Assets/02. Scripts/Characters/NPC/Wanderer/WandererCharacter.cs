@@ -41,6 +41,12 @@ public sealed class WandererCharacter : NPCCharacter
     [SerializeField] private float aggressionThreshold   = 110f;
     [SerializeField] private float aggressionCheckInterval = 2f;
 
+    [Header("Idle - Pickup")]
+    [Tooltip("이 거리 안의 골드/장비 픽업을 발견하면 주우러 감")]
+    [SerializeField] private float pickupSearchRadius  = 8f;
+    [SerializeField] private float pickupCollectRadius = 0.7f;
+    [SerializeField] private float pickupChaseSpeed    = 2.2f;
+
     [Header("Idle - Chatter")]
     [Tooltip("idle wander 중 평균 몇 초마다 대사")]
     [SerializeField] private Vector2 chatterIntervalRange = new(8f, 18f);
@@ -153,20 +159,58 @@ public sealed class WandererCharacter : NPCCharacter
         Transform enemy = FindNearestEnemyInRange(enemyDetectRadius);
         if (enemy != null) { EngageEnemy(enemy); return; }
 
-        // 2) 성격에 따른 선제공격 판정
+        // 2) 근처 픽업 줍기
+        if (TryCollectPickup()) return;
+
+        // 3) 성격에 따른 선제공격 판정
         if (_aggressionTimer <= 0f)
         {
             _aggressionTimer = aggressionCheckInterval;
             if (TryPreemptiveStrike()) return;
         }
 
-        // 3) Fear 높으면 거리 유지
+        // 4) Fear 높으면 거리 유지
         if (NPCStats.Fear >= fearKeepThreshold && TryKeepAwayFromPlayer())
             return;
 
-        // 4) Wander + 가끔 대사
+        // 5) Wander + 가끔 대사
         Wander();
         TryIdleChatter();
+    }
+
+    /// <summary>주변에 골드/장비 픽업이 있으면 가서 줍는다.</summary>
+    private bool TryCollectPickup()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickupSearchRadius);
+        PickupBase nearest = null;
+        float minD = float.MaxValue;
+
+        foreach (var h in hits)
+        {
+            if (h == null) continue;
+            var pickup = h.GetComponent<PickupBase>();
+            if (pickup == null || pickup.IsPicked) continue;
+            float d = Vector2.Distance(transform.position, pickup.transform.position);
+            if (d < minD) { minD = d; nearest = pickup; }
+        }
+
+        if (nearest == null) return false;
+
+        if (minD <= pickupCollectRadius)
+        {
+            // 가까이 도달 → 픽업 시도
+            switch (nearest)
+            {
+                case GoldPickup gp:      gp.TryPickupBy(NPCStats);  break;
+                case EquipmentPickup ep: ep.TryPickupBy(Inventory); break;
+            }
+            return true;
+        }
+
+        // 픽업 향해 이동
+        Vector2 dir = ((Vector2)nearest.transform.position - (Vector2)transform.position).normalized;
+        _rb.linearVelocity = dir * pickupChaseSpeed;
+        return true;
     }
 
     private void TickTimers()
@@ -389,7 +433,7 @@ public sealed class WandererCharacter : NPCCharacter
 
     private void OnDied(GameObject attacker)
     {
-        NPCDropHandler.HandleDrop(NPCStats, Inventory, attacker);
+        NPCDropHandler.HandleDrop(NPCStats, Inventory, transform.position);
         Destroy(gameObject);
     }
 

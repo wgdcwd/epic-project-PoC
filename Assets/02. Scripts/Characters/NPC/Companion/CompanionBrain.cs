@@ -38,6 +38,15 @@ public sealed class CompanionBrain : MonoBehaviour
     {
         if (!GameManager.Instance.IsPlaying) return;
 
+        // 휴식 중엔 동료들 정지 (자고 있음).
+        // 단, 배신/도주 상태는 이미 적대 진영이라 정상 동작.
+        if (RestSystem.Instance != null && RestSystem.Instance.IsResting &&
+            State != CompanionState.Hostile && State != CompanionState.Fleeing)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         switch (State)
         {
             case CompanionState.Following: UpdateFollowing(); break;

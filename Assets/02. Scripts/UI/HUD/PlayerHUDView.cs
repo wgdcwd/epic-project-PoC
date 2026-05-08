@@ -31,17 +31,15 @@ public sealed class PlayerHUDView : MonoBehaviour
 
         _stats.OnStatsChanged   += RefreshBars;
         _stats.OnGoldChanged    += RefreshGold;
-        _health.OnDamaged       += OnHealthDamaged;
+        _health.OnHPChanged     += RefreshBars;
 
         RefreshAll();
     }
 
-    private void OnHealthDamaged(float amount, GameObject attacker) => RefreshBars();
-
     void OnDestroy()
     {
         if (_stats  != null) { _stats.OnStatsChanged -= RefreshBars; _stats.OnGoldChanged -= RefreshGold; }
-        if (_health != null) _health.OnDamaged -= OnHealthDamaged;
+        if (_health != null) _health.OnHPChanged -= RefreshBars;
     }
 
     private void RefreshAll()

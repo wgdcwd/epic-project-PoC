@@ -13,8 +13,9 @@ public sealed class HealthComponent : MonoBehaviour
     public float HPRatio     => CurrentHP / MaxHP;
     public bool  IsAlive     => CurrentHP > 0f;
 
-    public event Action<float, GameObject> OnDamaged; // (amount, attacker)
-    public event Action<GameObject>        OnDied;    // (attacker)
+    public event Action<float, GameObject> OnDamaged;  // (amount, attacker)
+    public event Action<GameObject>        OnDied;     // (attacker)
+    public event Action                    OnHPChanged; // 피격/회복/MaxHP 변경 모두
 
     void Awake() => CurrentHP = maxHP;
 
@@ -23,6 +24,7 @@ public sealed class HealthComponent : MonoBehaviour
         maxHP = Mathf.Max(1f, value);
         if (refillOnSet) CurrentHP = maxHP;
         else             CurrentHP = Mathf.Min(CurrentHP, maxHP);
+        OnHPChanged?.Invoke();
     }
 
     public void TakeDamage(float amount, GameObject attacker)
@@ -30,6 +32,7 @@ public sealed class HealthComponent : MonoBehaviour
         if (!IsAlive || amount <= 0f) return;
         CurrentHP = Mathf.Max(0f, CurrentHP - amount);
         OnDamaged?.Invoke(amount, attacker);
+        OnHPChanged?.Invoke();
         if (!IsAlive) OnDied?.Invoke(attacker);
     }
 
@@ -37,6 +40,7 @@ public sealed class HealthComponent : MonoBehaviour
     {
         if (!IsAlive || amount <= 0f) return;
         CurrentHP = Mathf.Min(maxHP, CurrentHP + amount);
+        OnHPChanged?.Invoke();
     }
 
     public void HealPercent(float ratio) => Heal(maxHP * ratio);

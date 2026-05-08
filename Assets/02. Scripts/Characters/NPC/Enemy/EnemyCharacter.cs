@@ -19,7 +19,7 @@ public sealed class EnemyCharacter : CharacterBase
     protected override void HandleDeath(GameObject attacker)
     {
         int drop = Random.Range(goldDropMin, goldDropMax + 1);
-        LootSystem.HandleEnemyDeath(drop, attacker);
+        LootSystem.HandleEnemyDeath(drop, attacker, transform.position);
         Destroy(gameObject);
     }
 }

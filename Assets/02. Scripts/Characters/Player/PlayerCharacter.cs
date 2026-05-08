@@ -58,12 +58,31 @@ public sealed class PlayerCharacter : CharacterBase
 
     private void HandlePlayerDied(GameObject _) => GameManager.Instance?.TriggerGameOver();
 
+    private bool _handlingRestDamage;
+
     /// <summary>
-    /// 플레이어가 피격될 때마다 모든 동료가 즉시 기회 판정.
-    /// HP/Stamina 약화 보정이 배신 점수에 반영되어 자연스럽게 평소에도 배신 가능.
+    /// 플레이어 피격 시:
+    /// 1) 휴식 중이면 치명타 추가 데미지 + 강제 종료
+    /// 2) 모든 동료 점수 즉시 재계산 (HP 약화 보정 반영)
     /// </summary>
     private void HandlePlayerDamaged(float amount, GameObject attacker)
     {
+        if (_handlingRestDamage) return; // 재진입 방지
+
+        if (RestSystem.Instance != null && RestSystem.Instance.IsResting)
+        {
+            _handlingRestDamage = true;
+            try
+            {
+                float extra = Health.CurrentHP * RestSystem.Instance.RestCriticalRatio;
+                if (extra > 0f) Health.TakeDamage(extra, attacker);
+                BubbleManager.ShowBubble(transform, "크윽, 기습이다!");
+            }
+            finally { _handlingRestDamage = false; }
+
+            RestSystem.Instance.ForceWake("적의 기습!");
+        }
+
         if (PartyRoster.Instance == null) return;
         var snapshot = new System.Collections.Generic.List<CompanionCharacter>(PartyRoster.Instance.Members);
         foreach (var c in snapshot)

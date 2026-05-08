@@ -41,6 +41,7 @@ public sealed class CompanionCharacter : NPCCharacter
         NPCStats.OnTrustChanged   += OnTrustChanged;
         NPCStats.OnStaminaChanged += OnStaminaChanged;
         Health.OnDied             += OnDied;
+        Health.OnDamaged          += OnHealthDamaged;
     }
 
     void OnDisable()
@@ -55,6 +56,16 @@ public sealed class CompanionCharacter : NPCCharacter
         NPCStats.OnTrustChanged   -= OnTrustChanged;
         NPCStats.OnStaminaChanged -= OnStaminaChanged;
         Health.OnDied             -= OnDied;
+        Health.OnDamaged          -= OnHealthDamaged;
+    }
+
+    /// <summary>휴식 중인데 공격받으면 깨운다.</summary>
+    private void OnHealthDamaged(float amount, GameObject attacker)
+    {
+        if (RestSystem.Instance != null && RestSystem.Instance.IsResting)
+        {
+            RestSystem.Instance.ForceWake($"{NPCStats.NPCName}이(가) 공격받았다!");
+        }
     }
 
     void Start()
@@ -86,11 +97,26 @@ public sealed class CompanionCharacter : NPCCharacter
         BubbleManager.ShowBubble(transform, "미안하지만... 이게 낫겠어.");
         LogManager.AddLog($"{name}이(가) 배신했다!");
 
+        bool wasResting = RestSystem.Instance != null && RestSystem.Instance.IsResting;
+
+        // 휴식 중이면 다른 동료들에게 알림 (말풍선)
+        if (wasResting && PartyRoster.Instance != null)
+        {
+            foreach (var c in PartyRoster.Instance.Members)
+            {
+                if (c == null || c == this) continue;
+                BubbleManager.ShowBubble(c.transform, $"{name}이(가) 배신했어!");
+            }
+        }
+
         // 적대 상태로 전환
         Brain.SetState(CompanionState.Hostile);
         gameObject.layer = LayerMask.NameToLayer(Layers.Enemy);
         GetComponent<Shooter>()?.SetOwner(ProjectileOwner.Enemy);
         PartyRoster.Instance?.RemoveMember(this);
+
+        // 휴식 중이었으면 깨움
+        if (wasResting) RestSystem.Instance.ForceWake($"{name}의 배신!");
     }
 
     private void HandleFlee()
@@ -161,7 +187,7 @@ public sealed class CompanionCharacter : NPCCharacter
     private void OnDied(GameObject attacker)
     {
         PartyRoster.Instance?.RemoveMember(this);
-        NPCDropHandler.HandleDrop(NPCStats, Inventory, attacker);
+        NPCDropHandler.HandleDrop(NPCStats, Inventory, transform.position);
         Destroy(gameObject);
     }
 

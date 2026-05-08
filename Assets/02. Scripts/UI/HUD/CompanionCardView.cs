@@ -34,7 +34,7 @@ public sealed class CompanionCardView : MonoBehaviour
 
         companion.NPCStats.OnTrustChanged   += OnTrustChanged;
         companion.NPCStats.OnStaminaChanged += RefreshStamina;
-        companion.Health.OnDamaged          += OnHealthDamaged;
+        companion.Health.OnHPChanged        += RefreshHP;
         companion.Relationship.OnUnpaidChanged    += RefreshUnpaid;
         companion.Relationship.OnBetrayalWarning  += ShowBetrayalWarning;
         companion.Relationship.OnRetirementWarning += ShowRetirementWarning;
@@ -49,14 +49,12 @@ public sealed class CompanionCardView : MonoBehaviour
         if (waitingIcon != null) waitingIcon.SetActive(state == CompanionState.Waiting);
     }
 
-    private void OnHealthDamaged(float amount, GameObject attacker) => RefreshHP();
-
     public void Unbind()
     {
         if (_companion == null) return;
         _companion.NPCStats.OnTrustChanged   -= OnTrustChanged;
         _companion.NPCStats.OnStaminaChanged -= RefreshStamina;
-        _companion.Health.OnDamaged          -= OnHealthDamaged;
+        _companion.Health.OnHPChanged        -= RefreshHP;
         _companion.Relationship.OnUnpaidChanged    -= RefreshUnpaid;
         _companion.Relationship.OnBetrayalWarning  -= ShowBetrayalWarning;
         _companion.Relationship.OnRetirementWarning -= ShowRetirementWarning;
