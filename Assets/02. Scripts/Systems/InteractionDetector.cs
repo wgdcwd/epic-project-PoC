@@ -90,7 +90,15 @@ public sealed class InteractionDetector : MonoBehaviour
     private static bool IsValid(NPCCharacter npc)
     {
         if (npc == null || !npc.Health.IsAlive) return false;
+
+        // 도주/적대 중인 Wanderer 차단
         if (npc is WandererCharacter w && w.Mode != WandererCharacter.WandererMode.Idle) return false;
+
+        // 도주/적대(배신/절도) 중인 Companion 차단
+        if (npc is CompanionCharacter c &&
+            (c.Brain.State == CompanionState.Hostile || c.Brain.State == CompanionState.Fleeing))
+            return false;
+
         return true;
     }
 

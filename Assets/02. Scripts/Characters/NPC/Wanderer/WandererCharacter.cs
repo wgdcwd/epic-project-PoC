@@ -387,7 +387,11 @@ public sealed class WandererCharacter : NPCCharacter
 
     // ── 사망 / 영입 ──────────────────────────────────────
 
-    private void OnDied(GameObject attacker) => Destroy(gameObject);
+    private void OnDied(GameObject attacker)
+    {
+        NPCDropHandler.HandleDrop(NPCStats, Inventory, attacker);
+        Destroy(gameObject);
+    }
 
     protected override void HandleDeath(GameObject attacker) { }
 

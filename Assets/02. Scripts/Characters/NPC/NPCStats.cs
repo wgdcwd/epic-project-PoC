@@ -47,6 +47,10 @@ public sealed class NPCStats : MonoBehaviour
     public float BonusATK    { get; set; }
     public float FinalATK    => (baseATK + BonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
 
+    [Header("Wallet")]
+    [SerializeField] private int gold = 0;
+    public int Gold => gold;
+
     public event Action<float> OnTrustChanged;   // newTrust
     public event Action        OnStaminaChanged;
 
@@ -85,4 +89,25 @@ public sealed class NPCStats : MonoBehaviour
     }
 
     public void RestoreStamina(float amount) => ModifyStamina(amount);
+
+    public void AddGold(int amount)
+    {
+        if (amount <= 0) return;
+        gold += amount;
+    }
+
+    public bool SpendGold(int amount)
+    {
+        if (amount < 0 || gold < amount) return false;
+        gold -= amount;
+        return true;
+    }
+
+    /// <summary>NPC가 들고 있던 골드 전부를 빼서 반환 (사망 시 회수용).</summary>
+    public int TakeAllGold()
+    {
+        int g = gold;
+        gold = 0;
+        return g;
+    }
 }

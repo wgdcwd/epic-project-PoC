@@ -109,22 +109,32 @@ public sealed class CompanionCharacter : NPCCharacter
         string name = NPCStats.NPCName;
         var player = PlayerCharacter.Instance;
 
-        // 골드 절도: Greed 비례
+        // 골드 절도 → 자기 지갑에 누적 (사망 시 회수 가능)
         int stolenGold = 0;
         if (player != null && player.Stats.Gold > 0)
         {
             stolenGold = Mathf.Min(player.Stats.Gold, Mathf.RoundToInt(NPCStats.Greed * 2f));
-            if (stolenGold > 0) player.Stats.SpendGold(stolenGold);
+            if (stolenGold > 0)
+            {
+                player.Stats.SpendGold(stolenGold);
+                NPCStats.AddGold(stolenGold);
+            }
         }
 
-        // 장비 절도: NPC 인벤토리에 있는 그대로 가지고 도주
         int itemCount = Inventory.Slots.Inventory.Count;
-
         BubbleManager.ShowBubble(transform, "잘 챙겨갈게.");
         LogManager.AddLog($"{name}이(가) {stolenGold}G와 장비 {itemCount}개를 들고 도망쳤다!");
 
-        // 도주 (적대화 없이 사라짐) - 추후 디자인에 따라 적대화도 가능
-        Brain.SetState(CompanionState.Fleeing);
+        // 적대 진영으로 전환 (다시 영입/메뉴 차단 + 동료의 자동 공격 대상)
+        gameObject.layer = LayerMask.NameToLayer(Layers.Enemy);
+        GetComponent<Shooter>()?.SetOwner(ProjectileOwner.Enemy);
+
+        // Fear에 따라 도주 또는 즉시 공격
+        if (NPCStats.Fear >= 60f)
+            Brain.SetState(CompanionState.Fleeing);
+        else
+            Brain.SetState(CompanionState.Hostile);
+
         PartyRoster.Instance?.RemoveMember(this);
     }
 
@@ -151,6 +161,7 @@ public sealed class CompanionCharacter : NPCCharacter
     private void OnDied(GameObject attacker)
     {
         PartyRoster.Instance?.RemoveMember(this);
+        NPCDropHandler.HandleDrop(NPCStats, Inventory, attacker);
         Destroy(gameObject);
     }
 

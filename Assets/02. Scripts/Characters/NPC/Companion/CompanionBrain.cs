@@ -125,13 +125,22 @@ public sealed class CompanionBrain : MonoBehaviour
 
     private void UpdateFleeing()
     {
-        _rb.linearVelocity = _fleeDirection * moveSpeed * 1.2f;
+        var player = PlayerCharacter.Instance;
+        if (player == null) return;
 
-        // 일정 거리 이상 멀어지면 씬에서 제거
-        if (PlayerCharacter.Instance != null &&
-            Vector2.Distance(transform.position, PlayerCharacter.Instance.transform.position) > 30f)
+        float dist = Vector2.Distance(transform.position, player.transform.position);
+
+        // 가까우면 도망 방향 갱신 후 도주
+        if (dist < 12f)
         {
-            Destroy(gameObject);
+            _fleeDirection = ((Vector2)transform.position - (Vector2)player.transform.position).normalized;
+            if (_fleeDirection.sqrMagnitude < 0.01f) _fleeDirection = Random.insideUnitCircle.normalized;
+            _rb.linearVelocity = _fleeDirection * moveSpeed * 1.2f;
+        }
+        else
+        {
+            // 충분히 멀어졌으면 그 자리에 멈춤 (사라지지 않음 - 다시 마주칠 수 있음)
+            _rb.linearVelocity = Vector2.zero;
         }
     }
 
