@@ -36,16 +36,20 @@ public sealed class CompanionRelationship : MonoBehaviour
         OnUnpaidChanged?.Invoke(UnpaidAmount);
     }
 
-    /// <summary>정산 실행. 지급 골드를 받아 Trust 변화 반환.</summary>
+    /// <summary>
+    /// 정산 실행. 한 번 정산하면 미정산금은 0으로 클리어된다 (잔금 이월 없음).
+    /// 지급 비율로 Trust 변화량 계산, NPC는 그 결과로 만족/불만 결정.
+    /// </summary>
     public float Settle(int goldPaid)
     {
         if (UnpaidAmount <= 0f) return 0f;
 
-        float ratio  = goldPaid / UnpaidAmount;
-        float delta  = SettlementSystem.CalculateTrustDelta(ratio, _stats.Greed);
+        float ratio = goldPaid / UnpaidAmount;
+        float delta = SettlementSystem.CalculateTrustDelta(ratio, _stats.Greed);
         _stats.ModifyTrust(delta);
 
-        UnpaidAmount = Mathf.Max(0f, UnpaidAmount - goldPaid);
+        // 1회 정산으로 종료. 부족분/초과분 모두 이월 없이 클리어.
+        UnpaidAmount = 0f;
         OnUnpaidChanged?.Invoke(UnpaidAmount);
 
         return delta;

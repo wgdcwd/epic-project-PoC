@@ -49,13 +49,13 @@ public sealed class InteractionMenuView : MonoBehaviour
         {
             float initTrust = RecruitmentSystem.CalculateInitialTrust(npcSt, score);
             _target.ConvertToCompanion(initTrust);
-            LogManager.AddLog($"{npcSt.NPCName}이(가) 파티에 합류했다. (초기 Trust {initTrust:F0})");
+            LogManager.AddLog($"{npcSt.NPCName}이(가) 파티에 합류했다. (영입점수 {score:F1}, 초기 Trust {initTrust:F0})");
         }
         else
         {
             string line = RecruitmentSystem.GetRejectionLine(npcSt);
             BubbleManager.ShowBubble(_target.transform, line);
-            LogManager.AddLog($"{npcSt.NPCName}이(가) 영입을 거절했다.");
+            LogManager.AddLog($"{npcSt.NPCName}이(가) 영입을 거절했다. (영입점수 {score:F1} / 50)");
         }
 
         Close();

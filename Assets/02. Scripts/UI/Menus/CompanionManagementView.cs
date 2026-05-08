@@ -94,10 +94,12 @@ public sealed class CompanionManagementView : MonoBehaviour
 
     private void ToggleWait()
     {
-        if (_target == null) return;
+        if (_target == null) { Debug.LogWarning("[ToggleWait] _target is null"); return; }
         bool isWaiting = _target.Brain.State == CompanionState.Waiting;
-        _target.Brain.SetState(isWaiting ? CompanionState.Following : CompanionState.Waiting);
-        LogManager.AddLog($"{_target.NPCStats.NPCName}이(가) {(isWaiting ? "이동" : "대기")} 상태로 전환.");
+        var newState = isWaiting ? CompanionState.Following : CompanionState.Waiting;
+        Debug.Log($"[ToggleWait] {_target.NPCStats.NPCName} 현재상태={_target.Brain.State} → {newState}");
+        _target.Brain.SetState(newState);
+        LogManager.AddLog($"{_target.NPCStats.NPCName}이(가) {(isWaiting ? "다시 따라온다" : "이 자리에서 대기")}.");
         Close();
     }
 

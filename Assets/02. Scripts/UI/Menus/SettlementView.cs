@@ -140,6 +140,13 @@ public sealed class SettlementView : MonoBehaviour
     {
         if (_target == null || goldSlider == null) { Close(); return; }
 
+        // 미정산금이 이미 0이면 정산 자체가 의미 없음
+        if (_target.Relationship.UnpaidAmount <= 0f)
+        {
+            if (resultText != null) resultText.text = "정산할 금액이 없습니다.";
+            return;
+        }
+
         int amount = Mathf.RoundToInt(goldSlider.value);
 
         var player = PlayerCharacter.Instance?.Stats;
@@ -157,8 +164,7 @@ public sealed class SettlementView : MonoBehaviour
         if (resultText != null) resultText.text = $"정산 완료. Trust {sign}{delta:F1}";
         LogManager.AddLog($"{_target.NPCStats.NPCName}에게 {amount}G 정산. Trust {sign}{delta:F1}");
 
-        // 슬라이더 범위/표시 재계산 (미정산금이 줄었거나 골드가 줄어서)
-        SetupSlider();
-        RefreshDisplay();
+        // 한 번 정산하면 미정산금은 0으로 클리어되므로 자동으로 닫는다.
+        Close();
     }
 }

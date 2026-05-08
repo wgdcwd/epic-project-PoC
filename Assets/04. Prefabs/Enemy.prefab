@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 459b03e967095814ca442af634894812, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shooter
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 1116679254487750326, guid: 634971a4b320ca74f8cb914c9af688a6, type: 3}
   fireRate: 0.5
   damage: 10
   speed: 10

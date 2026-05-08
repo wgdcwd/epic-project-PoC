@@ -51,6 +51,14 @@ public sealed class EnemyBrain : MonoBehaviour
 
     private void UpdateTarget()
     {
+        // 한번 인식한 타겟이 살아있으면 끝까지 추적 (거리 무시)
+        if (_target != null)
+        {
+            var h = _target.GetComponent<HealthComponent>();
+            if (h != null && h.IsAlive) return;
+            _target = null;
+        }
+
         // 감지 범위 내 플레이어/동료 중 가장 가까운 대상 선택
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRadius,
                                                         Layers.EnemyTargetMask);

@@ -23,6 +23,7 @@ public sealed class CompanionCardView : MonoBehaviour
     [Header("Warning Icons")]
     [SerializeField] private GameObject retirementWarningIcon;
     [SerializeField] private GameObject betrayalWarningIcon;
+    [SerializeField] private GameObject waitingIcon; // 대기 상태 표시 (옵션)
 
     private CompanionCharacter _companion;
 
@@ -38,8 +39,14 @@ public sealed class CompanionCardView : MonoBehaviour
         companion.Relationship.OnBetrayalWarning  += ShowBetrayalWarning;
         companion.Relationship.OnRetirementWarning += ShowRetirementWarning;
         companion.Inventory.Slots.OnEquipmentChanged += RefreshEquipment;
+        companion.Brain.OnStateChanged += OnBrainStateChanged;
 
         RefreshAll();
+    }
+
+    private void OnBrainStateChanged(CompanionState state)
+    {
+        if (waitingIcon != null) waitingIcon.SetActive(state == CompanionState.Waiting);
     }
 
     private void OnHealthDamaged(float amount, GameObject attacker) => RefreshHP();
@@ -54,6 +61,7 @@ public sealed class CompanionCardView : MonoBehaviour
         _companion.Relationship.OnBetrayalWarning  -= ShowBetrayalWarning;
         _companion.Relationship.OnRetirementWarning -= ShowRetirementWarning;
         _companion.Inventory.Slots.OnEquipmentChanged -= RefreshEquipment;
+        _companion.Brain.OnStateChanged -= OnBrainStateChanged;
         _companion = null;
     }
 
@@ -68,6 +76,7 @@ public sealed class CompanionCardView : MonoBehaviour
         OnTrustChanged(_companion.NPCStats.Trust);
         RefreshUnpaid(_companion.Relationship.UnpaidAmount);
         RefreshEquipment();
+        OnBrainStateChanged(_companion.Brain.State);
     }
 
     private void RefreshHP()

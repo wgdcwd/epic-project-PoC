@@ -70,6 +70,9 @@ public sealed class InteractionDetector : MonoBehaviour
             var npc = hit.GetComponent<NPCCharacter>();
             if (npc == null || !npc.Health.IsAlive) continue;
 
+            // 도주/적대 중인 Wanderer는 상호작용 불가
+            if (npc is WandererCharacter w && w.Mode != WandererCharacter.WandererMode.Idle) continue;
+
             float d = Vector2.Distance(transform.position, hit.transform.position);
             if (d < minDist) { minDist = d; best = npc; }
         }

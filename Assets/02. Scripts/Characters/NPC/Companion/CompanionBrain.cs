@@ -45,10 +45,14 @@ public sealed class CompanionBrain : MonoBehaviour
 
     // ── 상태 전환 ────────────────────────────────────────
 
+    public event System.Action<CompanionState> OnStateChanged;
+
     public void SetState(CompanionState newState)
     {
         if (State == newState) return;
+        Debug.Log($"[CompanionBrain] {name} : {State} → {newState}");
         State = newState;
+        OnStateChanged?.Invoke(newState);
 
         if (newState == CompanionState.Fleeing)
         {
