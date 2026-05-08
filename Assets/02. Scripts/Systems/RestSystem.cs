@@ -41,9 +41,14 @@ public sealed class RestSystem : MonoBehaviour
     {
         IsResting = true;
         OnRestStarted?.Invoke();
-        LogManager.AddLog("휴식을 시작했다...");
+        LogManager.AddLog("휴식을 시작했다... (위험할 수 있다)");
 
-        yield return new WaitForSeconds(restDuration);
+        // 잠든 직후 (0.5초) - 동료가 자유 시간에 결심: 절도/배신/탈퇴/도주
+        yield return new WaitForSeconds(0.5f);
+        DoCheckRestOpportunity();
+
+        // 나머지 휴식 시간
+        yield return new WaitForSeconds(Mathf.Max(0f, restDuration - 0.5f));
 
         // 플레이어 회복
         var player = PlayerCharacter.Instance;
@@ -64,8 +69,10 @@ public sealed class RestSystem : MonoBehaviour
 
             // 이탈로 목록 변경 가능하므로 복사 후 순회
             var snapshot = new System.Collections.Generic.List<CompanionCharacter>(PartyRoster.Instance.Members);
+            Debug.Log($"[RestSystem] 동료 {snapshot.Count}명에 대해 이벤트 판정 시작");
             foreach (var companion in snapshot)
             {
+                if (companion == null) continue;
                 companion.Relationship.CheckAfterRest();
                 companion.Relationship.ClearComplaintFlag();
             }
@@ -74,6 +81,18 @@ public sealed class RestSystem : MonoBehaviour
         LogManager.AddLog("휴식을 마쳤다.");
         IsResting = false;
         OnRestFinished?.Invoke(true);
+    }
+
+    private void DoCheckRestOpportunity()
+    {
+        if (PartyRoster.Instance == null) return;
+        var snapshot = new System.Collections.Generic.List<CompanionCharacter>(PartyRoster.Instance.Members);
+        Debug.Log($"[RestSystem] 휴식 중 기회 판정 - {snapshot.Count}명");
+        foreach (var c in snapshot)
+        {
+            if (c == null) continue;
+            c.Relationship.CheckRestOpportunity();
+        }
     }
 
     private bool IsEnemyNearby()

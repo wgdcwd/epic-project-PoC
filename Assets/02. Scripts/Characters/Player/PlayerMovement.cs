@@ -18,6 +18,13 @@ public sealed class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        // 휴식 중엔 플레이어만 정지 (다른 캐릭터는 정상 동작)
+        if (RestSystem.Instance != null && RestSystem.Instance.IsResting)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         Vector2 vel = _input.MoveInput.normalized * moveSpeed;
         _rb.linearVelocity = vel;
     }

@@ -14,6 +14,10 @@ public sealed class CompanionCharacter : NPCCharacter
     private float _prevTrust = -1f;
     private float _prevStamina = -1f;
 
+    // 평소 점수 패시브 체크
+    private float _passiveCheckTimer;
+    private const float PassiveCheckInterval = 6f;
+
     protected override void Awake()
     {
         base.Awake();
@@ -30,6 +34,7 @@ public sealed class CompanionCharacter : NPCCharacter
         Relationship.OnBetrayalTriggered   += HandleBetrayal;
         Relationship.OnFleeTriggered       += HandleFlee;
         Relationship.OnRetirementTriggered += HandleRetirement;
+        Relationship.OnTheftTriggered      += HandleTheft;
         Relationship.OnBetrayalWarning     += Reaction.TriggerBetrayalWarning;
         Relationship.OnRetirementWarning   += Reaction.TriggerRetirementWarning;
 
@@ -43,6 +48,7 @@ public sealed class CompanionCharacter : NPCCharacter
         Relationship.OnBetrayalTriggered   -= HandleBetrayal;
         Relationship.OnFleeTriggered       -= HandleFlee;
         Relationship.OnRetirementTriggered -= HandleRetirement;
+        Relationship.OnTheftTriggered      -= HandleTheft;
         Relationship.OnBetrayalWarning     -= Reaction.TriggerBetrayalWarning;
         Relationship.OnRetirementWarning   -= Reaction.TriggerRetirementWarning;
 
@@ -55,7 +61,21 @@ public sealed class CompanionCharacter : NPCCharacter
     {
         _prevTrust   = NPCStats.Trust;
         _prevStamina = NPCStats.Stamina;
+        _passiveCheckTimer = UnityEngine.Random.Range(2f, PassiveCheckInterval);
         PartyRoster.Instance?.AddMember(this);
+    }
+
+    void Update()
+    {
+        if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;
+
+        _passiveCheckTimer -= Time.deltaTime;
+        if (_passiveCheckTimer <= 0f)
+        {
+            _passiveCheckTimer = PassiveCheckInterval;
+            // 평소에도 점수 임계값 통과하면 배신/도주/탈퇴 발동
+            Relationship.CheckImmediateThresholds();
+        }
     }
 
     // ── 이탈 처리 ────────────────────────────────────────
@@ -82,6 +102,30 @@ public sealed class CompanionCharacter : NPCCharacter
         Brain.SetState(CompanionState.Fleeing);
         PartyRoster.Instance?.RemoveMember(this);
         // 착용 장비 들고 도망 (인벤토리 유지)
+    }
+
+    private void HandleTheft()
+    {
+        string name = NPCStats.NPCName;
+        var player = PlayerCharacter.Instance;
+
+        // 골드 절도: Greed 비례
+        int stolenGold = 0;
+        if (player != null && player.Stats.Gold > 0)
+        {
+            stolenGold = Mathf.Min(player.Stats.Gold, Mathf.RoundToInt(NPCStats.Greed * 2f));
+            if (stolenGold > 0) player.Stats.SpendGold(stolenGold);
+        }
+
+        // 장비 절도: NPC 인벤토리에 있는 그대로 가지고 도주
+        int itemCount = Inventory.Slots.Inventory.Count;
+
+        BubbleManager.ShowBubble(transform, "잘 챙겨갈게.");
+        LogManager.AddLog($"{name}이(가) {stolenGold}G와 장비 {itemCount}개를 들고 도망쳤다!");
+
+        // 도주 (적대화 없이 사라짐) - 추후 디자인에 따라 적대화도 가능
+        Brain.SetState(CompanionState.Fleeing);
+        PartyRoster.Instance?.RemoveMember(this);
     }
 
     private void HandleRetirement()

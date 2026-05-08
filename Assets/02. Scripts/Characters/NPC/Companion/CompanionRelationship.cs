@@ -18,6 +18,7 @@ public sealed class CompanionRelationship : MonoBehaviour
     public event Action OnBetrayalTriggered;
     public event Action OnFleeTriggered;
     public event Action OnRetirementTriggered;
+    public event Action OnTheftTriggered;          // 휴식 중 절도
     public event Action OnBetrayalWarning;
     public event Action OnRetirementWarning;
     public event Action<float> OnUnpaidChanged;
@@ -76,7 +77,13 @@ public sealed class CompanionRelationship : MonoBehaviour
                 BubbleManager.ShowBubble(transform, "한 번만 더 그러면 나도 가만 안 있어.");
         }
 
-        LogManager.AddLog($"{name}이(가) 플레이어의 공격에 맞았다.");
+        LogManager.AddLog($"{name}이(가) 플레이어의 공격에 맞았다. (Trust {_stats.Trust:F0})");
+
+        int betray = CalculateBetrayalScore();
+        int flee   = CalculateFleeScore();
+        int retire = CalculateRetirementScore();
+        Debug.Log($"[피격 판정] {name}  Trust={_stats.Trust:F0}  betray={betray}/140  flee={flee}/110  retire={retire}/100");
+
         CheckImmediateThresholds();
     }
 
@@ -131,6 +138,20 @@ public sealed class CompanionRelationship : MonoBehaviour
         );
     }
 
+    /// <summary>휴식 중 절도 점수. Fear가 높으면 겁나서 못 훔침.</summary>
+    public int CalculateTheftScore()
+    {
+        var ps = PlayerCharacter.Instance?.Stats;
+        return Mathf.RoundToInt(
+            (100f - _stats.Trust)
+            + _stats.Greed
+            + (100f - _stats.Morality)
+            + (ps?.FinalWealth ?? 0f) * 0.5f
+            + UnpaidAmount / 10f
+            - _stats.Fear * 0.4f
+        );
+    }
+
     public int CalculateBetrayalScore()
     {
         var ps = PlayerCharacter.Instance?.Stats;
@@ -167,20 +188,42 @@ public sealed class CompanionRelationship : MonoBehaviour
         else if (retire >=  80) OnRetirementWarning?.Invoke();
     }
 
-    // 휴식 후 전체 이벤트 판정 (우선순위: 배신 > 도주 > 탈퇴 > 요구 > 무사)
+    /// <summary>
+    /// 휴식 시작 직후 판정. 무방비 상태의 플레이어를 의식 → 평소보다 낮은 임계값.
+    /// 절도 / 배신 / 자진탈퇴 / 도주 순서로 우선순위.
+    /// </summary>
+    public void CheckRestOpportunity()
+    {
+        int theft  = CalculateTheftScore();
+        int betray = CalculateBetrayalScore();
+        int retire = CalculateRetirementScore();
+        int flee   = CalculateFleeScore();
+
+        Debug.Log($"[휴식 중 기회] {_stats.NPCName}  theft={theft}/130  betray={betray}/120  retire={retire}/85  flee={flee}/100");
+
+        if      (theft  >= 130) { OnTheftTriggered?.Invoke();      return; }
+        else if (betray >= 120) { OnBetrayalTriggered?.Invoke();   return; }
+        else if (retire >=  85) { OnRetirementTriggered?.Invoke(); return; }
+        else if (flee   >= 100) { OnFleeTriggered?.Invoke();       return; }
+    }
+
+    // 휴식 후 전체 이벤트 판정 (우선순위: 배신 > 도주 > 탈퇴 > 경고 > 요구 > 무사)
     public void CheckAfterRest()
     {
-        int betray  = CalculateBetrayalScore();
-        int flee    = CalculateFleeScore();
-        int retire  = CalculateRetirementScore();
+        int betray = CalculateBetrayalScore();
+        int flee   = CalculateFleeScore();
+        int retire = CalculateRetirementScore();
 
-        if      (betray >= 140) OnBetrayalTriggered?.Invoke();
-        else if (flee   >= 110) OnFleeTriggered?.Invoke();
-        else if (retire >= 100) OnRetirementTriggered?.Invoke();
+        Debug.Log($"[휴식 판정] {_stats.NPCName}  betray={betray}/140  flee={flee}/110  retire={retire}/100");
+
+        if      (betray >= 140) { OnBetrayalTriggered?.Invoke();   return; }
+        else if (flee   >= 110) { OnFleeTriggered?.Invoke();       return; }
+        else if (retire >= 100) { OnRetirementTriggered?.Invoke(); return; }
         else if (betray >= 120) OnBetrayalWarning?.Invoke();
         else if (retire >=  80) OnRetirementWarning?.Invoke();
-        // 정산 요구 판정
-        else CheckSettlementDemand();
+
+        // 정산 요구 (배신/탈퇴 경고와 별도로 항상 판정)
+        CheckSettlementDemand();
     }
 
     private void CheckSettlementDemand()

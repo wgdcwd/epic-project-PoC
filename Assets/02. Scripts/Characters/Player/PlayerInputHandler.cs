@@ -9,6 +9,9 @@ public sealed class PlayerInputHandler : MonoBehaviour
 {
     public Vector2 MoveInput { get; private set; }
 
+    /// <summary>현재 프레임 마우스 월드 좌표</summary>
+    public Vector2 MouseWorldPos => GetMouseWorldPos();
+
     public event Action<Vector2> OnFirePressed;      // 발사 목표 월드 위치
     public event Action<Vector2> OnInteractPressed;  // 상호작용 목표 월드 위치
     public event Action          OnRestPressed;

@@ -8,9 +8,13 @@ public enum CompanionState { Following, Waiting, Fleeing, Hostile }
 [RequireComponent(typeof(Rigidbody2D), typeof(Shooter))]
 public sealed class CompanionBrain : MonoBehaviour
 {
-    [SerializeField] private float followDistance  = 2f;   // 플레이어와 유지할 거리
-    [SerializeField] private float attackRadius    = 7f;
-    [SerializeField] private float moveSpeed       = 4.5f;
+    [SerializeField] private float followDistance     = 2f;   // 플레이어와 유지할 거리
+    [SerializeField] private float attackRadius       = 7f;
+    [SerializeField] private float moveSpeed          = 4.5f;
+
+    [Header("Separation (다른 동료와 거리 유지)")]
+    [SerializeField] private float separationDistance = 1.5f;
+    [SerializeField] private float separationStrength = 3.5f;
 
     public CompanionState State { get; private set; } = CompanionState.Following;
 
@@ -76,30 +80,47 @@ public sealed class CompanionBrain : MonoBehaviour
         var player = PlayerCharacter.Instance;
         if (player == null) return;
 
+        Vector2 separation = GetSeparationForce() * separationStrength;
+
         // 주변 적 탐색
         Transform enemy = FindNearestEnemy();
-        if (enemy != null)
+        if (enemy != null && Vector2.Distance(transform.position, enemy.position) <= attackRadius)
         {
-            float dist = Vector2.Distance(transform.position, enemy.position);
-            if (dist <= attackRadius)
-            {
-                _rb.linearVelocity = Vector2.zero;
-                _shooter.TryFireAt(enemy.position);
-                return;
-            }
+            // 공격 중에도 분리 force만큼은 적용 (밀착 방지)
+            _rb.linearVelocity = separation;
+            _shooter.TryFireAt(enemy.position);
+            return;
         }
 
-        // 플레이어 추종
+        // 플레이어 추종 + 분리
         float playerDist = Vector2.Distance(transform.position, player.transform.position);
+        Vector2 toPlayer = ((Vector2)player.transform.position - (Vector2)transform.position).normalized;
+
         if (playerDist > followDistance)
-        {
-            Vector2 dir = ((Vector2)player.transform.position - (Vector2)transform.position).normalized;
-            _rb.linearVelocity = dir * moveSpeed;
-        }
+            _rb.linearVelocity = toPlayer * moveSpeed + separation;
         else
+            _rb.linearVelocity = separation; // 가까울 땐 분리만 적용
+    }
+
+    /// <summary>다른 동료와 separationDistance 안에 있으면 멀어지는 방향의 정규화된 벡터 합.</summary>
+    private Vector2 GetSeparationForce()
+    {
+        if (PartyRoster.Instance == null) return Vector2.zero;
+
+        Vector2 result = Vector2.zero;
+        foreach (var other in PartyRoster.Instance.Members)
         {
-            _rb.linearVelocity = Vector2.zero;
+            if (other == null || other.gameObject == gameObject) continue;
+
+            Vector2 diff   = (Vector2)transform.position - (Vector2)other.transform.position;
+            float   dist   = diff.magnitude;
+            if (dist <= 0f || dist >= separationDistance) continue;
+
+            // 가까울수록 강하게 밀어냄 (선형 감쇠)
+            float weight = (separationDistance - dist) / separationDistance;
+            result += diff.normalized * weight;
         }
+        return result;
     }
 
     private void UpdateFleeing()

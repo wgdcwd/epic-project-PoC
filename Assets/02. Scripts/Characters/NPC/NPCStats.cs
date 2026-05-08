@@ -21,6 +21,16 @@ public sealed class NPCStats : MonoBehaviour
     [SerializeField, Range(0, 100)] private float fear     = 50f;
     [SerializeField, Range(0, 100)] private float morality = 50f;
 
+    [Header("Spawn Randomization")]
+    [Tooltip("체크 시 Awake에서 이름/성향 값을 랜덤화 (Wanderer 단일 프리팹 다양성 확보용)")]
+    [SerializeField] private bool randomizeOnSpawn = false;
+
+    private static readonly string[] NamePool = {
+        "박민호", "정찬서", "유윤상", "김우성", "이재준",
+        "최도윤", "한지원", "오세훈", "장태현", "남궁민",
+        "권시우", "윤서아", "조하늘", "강현우", "임도현"
+    };
+
     public string NPCName   => npcName;
     public float  BaseHP    => baseHP;
     public float  BaseATK   => baseATK;
@@ -42,8 +52,18 @@ public sealed class NPCStats : MonoBehaviour
 
     void Awake()
     {
+        if (randomizeOnSpawn) Randomize();
         Trust   = Mathf.Clamp(trust, 0f, 100f);
         Stamina = maxStamina;
+    }
+
+    private void Randomize()
+    {
+        npcName  = NamePool[UnityEngine.Random.Range(0, NamePool.Length)];
+        trust    = UnityEngine.Random.Range(40f, 65f);
+        greed    = UnityEngine.Random.Range(20f, 95f);
+        fear     = UnityEngine.Random.Range(20f, 90f);
+        morality = UnityEngine.Random.Range(20f, 90f);
     }
 
     public void ModifyTrust(float delta)

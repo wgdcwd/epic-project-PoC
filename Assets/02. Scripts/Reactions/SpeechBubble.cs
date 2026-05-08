@@ -15,8 +15,13 @@ public sealed class SpeechBubble : MonoBehaviour
     private Transform _target;
     private Vector3   _offset = new(0f, 1.5f, 0f);
 
+    public Transform Target => _target;
+
     public void Show(Transform target, string text)
     {
+        if (this == null) return;          // 자신이 destroyed면 무시
+        if (target == null) return;
+
         _target = target;
         if (tmpText != null)
         {
