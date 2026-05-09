@@ -15,9 +15,15 @@ public sealed class PlayerCharacter : CharacterBase
     public PlayerInventory    Inventory { get; private set; }
     public InteractionDetector Detector { get; private set; }
 
+    [Header("Wealth Visual")]
+    [SerializeField] private float goldScalePerGold  = 0.0006f;
+    [SerializeField] private float goldScaleMaxBonus = 0.6f;
+
     private Shooter            _shooter;
     private PlayerInputHandler _input;
     private StaminaSystem      _stamina;
+    private SpriteRenderer     _sr;
+    private Vector3            _baseScale;
 
     protected override void Awake()
     {
@@ -36,6 +42,9 @@ public sealed class PlayerCharacter : CharacterBase
         _stamina.Initialize(() => Stats.Stamina, delta => Stats.ModifyStamina(delta));
 
         gameObject.layer = LayerMask.NameToLayer(Layers.Player);
+
+        _sr = GetComponentInChildren<SpriteRenderer>();
+        if (_sr != null) _baseScale = _sr.transform.localScale;
     }
 
     void OnEnable()
@@ -45,6 +54,8 @@ public sealed class PlayerCharacter : CharacterBase
         _input.OnRestPressed     += HandleRest;
         Health.OnDied            += HandlePlayerDied;
         Health.OnDamaged         += HandlePlayerDamaged;
+        Stats.OnGoldChanged      += OnGoldChanged;
+        UpdateGoldScale();
     }
 
     void OnDisable()
@@ -54,6 +65,16 @@ public sealed class PlayerCharacter : CharacterBase
         _input.OnRestPressed     -= HandleRest;
         Health.OnDied            -= HandlePlayerDied;
         Health.OnDamaged         -= HandlePlayerDamaged;
+        Stats.OnGoldChanged      -= OnGoldChanged;
+    }
+
+    private void OnGoldChanged(int _) => UpdateGoldScale();
+
+    private void UpdateGoldScale()
+    {
+        if (_sr == null) return;
+        float bonus = Mathf.Min(goldScaleMaxBonus, Stats.Gold * goldScalePerGold);
+        _sr.transform.localScale = _baseScale * (1f + bonus);
     }
 
     private void HandlePlayerDied(GameObject _) => GameManager.Instance?.TriggerGameOver();
@@ -84,7 +105,7 @@ public sealed class PlayerCharacter : CharacterBase
         }
 
         if (PartyRoster.Instance == null) return;
-        var snapshot = new System.Collections.Generic.List<CompanionCharacter>(PartyRoster.Instance.Members);
+        var snapshot = new System.Collections.Generic.List<NPCCharacter>(PartyRoster.Instance.Members);
         foreach (var c in snapshot)
         {
             if (c == null) continue;

@@ -6,8 +6,8 @@ using UnityEngine;
 /// </summary>
 public sealed class CompanionRelationship : MonoBehaviour
 {
-    private NPCStats           _stats;
-    private CompanionCharacter _companion;
+    private NPCStats     _stats;
+    private NPCCharacter _npc;
 
     public float UnpaidAmount  { get; private set; }
 
@@ -25,8 +25,8 @@ public sealed class CompanionRelationship : MonoBehaviour
 
     void Awake()
     {
-        _stats     = GetComponent<NPCStats>();
-        _companion = GetComponent<CompanionCharacter>();
+        _stats = GetComponent<NPCStats>();
+        _npc   = GetComponent<NPCCharacter>();
     }
 
     // ── 미정산금 ──────────────────────────────────────────
@@ -40,6 +40,7 @@ public sealed class CompanionRelationship : MonoBehaviour
     /// <summary>
     /// 정산 실행. 한 번 정산하면 미정산금은 0으로 클리어된다 (잔금 이월 없음).
     /// 지급 비율로 Trust 변화량 계산, NPC는 그 결과로 만족/불만 결정.
+    /// 지급된 골드는 NPC 지갑에 누적되어 보유 골드 비례 스탯 보너스로 작용.
     /// </summary>
     public float Settle(int goldPaid)
     {
@@ -48,6 +49,9 @@ public sealed class CompanionRelationship : MonoBehaviour
         float ratio = goldPaid / UnpaidAmount;
         float delta = SettlementSystem.CalculateTrustDelta(ratio, _stats.Greed);
         _stats.ModifyTrust(delta);
+
+        // 정산받은 골드는 NPC 지갑에 누적 (강해짐 + 사망 시 회수 가능)
+        if (goldPaid > 0) _stats.AddGold(goldPaid);
 
         // 1회 정산으로 종료. 부족분/초과분 모두 이월 없이 클리어.
         UnpaidAmount = 0f;

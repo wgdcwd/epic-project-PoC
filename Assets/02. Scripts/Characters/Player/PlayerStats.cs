@@ -32,7 +32,11 @@ public sealed class PlayerStats : MonoBehaviour
     public float BonusThreat { get; set; }
     public float BonusWealth { get; set; }
 
-    public float FinalATK    => (baseATK + BonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
+    // 보유 골드에 비례한 스탯 보너스 (상점 대용)
+    public float GoldBonusATK => Gold / 100f;
+    public float GoldBonusHP  => Gold / 20f;
+
+    public float FinalATK    => (baseATK + BonusATK + GoldBonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
     public float FinalThreat => baseThreat + BonusThreat;
     public float FinalWealth => baseWealth + BonusWealth;
 

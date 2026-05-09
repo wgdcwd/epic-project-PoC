@@ -21,7 +21,17 @@ public sealed class NPCInventory : MonoBehaviour
         Slots.OnEquipmentChanged += ApplyBonuses;
     }
 
-    void OnDestroy() => Slots.OnEquipmentChanged -= ApplyBonuses;
+    void Start()
+    {
+        ApplyBonuses();
+        if (_stats != null) _stats.OnGoldChanged += ApplyBonuses;
+    }
+
+    void OnDestroy()
+    {
+        Slots.OnEquipmentChanged -= ApplyBonuses;
+        if (_stats != null) _stats.OnGoldChanged -= ApplyBonuses;
+    }
 
     // ── 장비 수령 ────────────────────────────────────────
 
@@ -91,6 +101,6 @@ public sealed class NPCInventory : MonoBehaviour
     private void ApplyBonuses()
     {
         _stats.BonusATK = Slots.TotalATK;
-        _health.SetMaxHP(_stats.BaseHP + Slots.TotalHP);
+        _health.SetMaxHP(_stats.BaseHP + Slots.TotalHP + _stats.GoldBonusHP);
     }
 }

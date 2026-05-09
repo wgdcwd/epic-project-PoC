@@ -13,7 +13,7 @@ public sealed class InteractionMenuView : MonoBehaviour
     [SerializeField] private Button           statusBtn;
     [SerializeField] private Button           ignoreBtn;
 
-    private WandererCharacter _target;
+    private NPCCharacter _target;
 
     void Awake()
     {
@@ -23,10 +23,10 @@ public sealed class InteractionMenuView : MonoBehaviour
         panel.SetActive(false);
     }
 
-    public void Open(WandererCharacter wanderer)
+    public void Open(NPCCharacter wanderer)
     {
         _target = wanderer;
-        if (npcNameText != null) npcNameText.text = wanderer.NPCStats.NPCName;
+        if (npcNameText != null) npcNameText.text = wanderer.Stats.NPCName;
         panel.SetActive(true);
     }
 
@@ -42,13 +42,13 @@ public sealed class InteractionMenuView : MonoBehaviour
 
         var ps = PlayerCharacter.Instance?.Stats;
         if (ps == null) { Close(); return; }
-        var npcSt = _target.NPCStats;
+        var npcSt = _target.Stats;
         float score = RecruitmentSystem.CalculateScore(ps, npcSt);
 
         if (RecruitmentSystem.CanRecruit(score))
         {
             float initTrust = RecruitmentSystem.CalculateInitialTrust(npcSt, score);
-            _target.ConvertToCompanion(initTrust);
+            _target.JoinAsCompanion(initTrust);
             LogManager.AddLog($"{npcSt.NPCName}이(가) 파티에 합류했다. (영입점수 {score:F1}, 초기 Trust {initTrust:F0})");
         }
         else
@@ -64,7 +64,7 @@ public sealed class InteractionMenuView : MonoBehaviour
     private void OnStatus()
     {
         if (_target == null) { Close(); return; }
-        var s = _target.NPCStats;
+        var s = _target.Stats;
         LogManager.AddLog($"[{s.NPCName}] Trust:{s.Trust:F0} Greed:{s.Greed:F0} Fear:{s.Fear:F0} Morality:{s.Morality:F0}");
         Close();
     }

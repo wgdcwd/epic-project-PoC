@@ -21,14 +21,24 @@ public sealed class PlayerInventory : MonoBehaviour
         Slots.OnEquipmentChanged += ApplyBonuses;
     }
 
-    void Start() => ApplyBonuses();
+    void Start()
+    {
+        ApplyBonuses();
+        if (_stats != null) _stats.OnGoldChanged += OnGoldChanged;
+    }
 
-    void OnDestroy() => Slots.OnEquipmentChanged -= ApplyBonuses;
+    void OnDestroy()
+    {
+        Slots.OnEquipmentChanged -= ApplyBonuses;
+        if (_stats != null) _stats.OnGoldChanged -= OnGoldChanged;
+    }
+
+    private void OnGoldChanged(int _) => ApplyBonuses();
 
     private void ApplyBonuses()
     {
         _stats.RecalculateBonuses(Slots.TotalATK, Slots.TotalThreat, Slots.TotalWealth);
-        _health.SetMaxHP(_stats.BaseHP + Slots.TotalHP);
+        _health.SetMaxHP(_stats.BaseHP + Slots.TotalHP + _stats.GoldBonusHP);
     }
 
     public bool HasItem(EquipmentData item) => Slots.Inventory.Contains(item);

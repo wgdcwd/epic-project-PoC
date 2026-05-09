@@ -93,12 +93,12 @@ public sealed class RestSystem : MonoBehaviour
 
         if (PartyRoster.Instance != null)
         {
-            var snapshot = new List<CompanionCharacter>(PartyRoster.Instance.Members);
+            var snapshot = new List<NPCCharacter>(PartyRoster.Instance.Members);
             foreach (var c in snapshot)
             {
                 if (c == null) continue;
                 c.Health.HealPercent(hpRecoverRatio);
-                c.NPCStats.RestoreStamina(staminaRecover);
+                c.Stats.RestoreStamina(staminaRecover);
                 c.Relationship.CheckAfterRest();
                 c.Relationship.ClearComplaintFlag();
             }
@@ -113,7 +113,7 @@ public sealed class RestSystem : MonoBehaviour
     private void DoCheckRestOpportunity()
     {
         if (PartyRoster.Instance == null) return;
-        var snapshot = new List<CompanionCharacter>(PartyRoster.Instance.Members);
+        var snapshot = new List<NPCCharacter>(PartyRoster.Instance.Members);
         Debug.Log($"[RestSystem] 휴식 중 기회 판정 - {snapshot.Count}명");
         foreach (var c in snapshot)
         {

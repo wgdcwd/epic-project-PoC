@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 동료 1명의 HUD 카드.
-/// CompanionCharacter 할당 후 이벤트를 구독해 자동 갱신.
+/// NPCCharacter 할당 후 이벤트를 구독해 자동 갱신.
 /// </summary>
 public sealed class CompanionCardView : MonoBehaviour
 {
@@ -25,41 +25,41 @@ public sealed class CompanionCardView : MonoBehaviour
     [SerializeField] private GameObject betrayalWarningIcon;
     [SerializeField] private GameObject waitingIcon; // 대기 상태 표시 (옵션)
 
-    private CompanionCharacter _companion;
+    private NPCCharacter _companion;
 
-    public void Bind(CompanionCharacter companion)
+    public void Bind(NPCCharacter companion)
     {
         Unbind();
         _companion = companion;
 
-        companion.NPCStats.OnTrustChanged   += OnTrustChanged;
-        companion.NPCStats.OnStaminaChanged += RefreshStamina;
+        companion.Stats.OnTrustChanged   += OnTrustChanged;
+        companion.Stats.OnStaminaChanged += RefreshStamina;
         companion.Health.OnHPChanged        += RefreshHP;
         companion.Relationship.OnUnpaidChanged    += RefreshUnpaid;
         companion.Relationship.OnBetrayalWarning  += ShowBetrayalWarning;
         companion.Relationship.OnRetirementWarning += ShowRetirementWarning;
         companion.Inventory.Slots.OnEquipmentChanged += RefreshEquipment;
-        companion.Brain.OnStateChanged += OnBrainStateChanged;
+        companion.OnBehaviorChanged += OnBehaviorChanged;
 
         RefreshAll();
     }
 
-    private void OnBrainStateChanged(CompanionState state)
+    private void OnBehaviorChanged(NPCBehavior behavior)
     {
-        if (waitingIcon != null) waitingIcon.SetActive(state == CompanionState.Waiting);
+        if (waitingIcon != null) waitingIcon.SetActive(behavior == NPCBehavior.Waiting);
     }
 
     public void Unbind()
     {
         if (_companion == null) return;
-        _companion.NPCStats.OnTrustChanged   -= OnTrustChanged;
-        _companion.NPCStats.OnStaminaChanged -= RefreshStamina;
+        _companion.Stats.OnTrustChanged   -= OnTrustChanged;
+        _companion.Stats.OnStaminaChanged -= RefreshStamina;
         _companion.Health.OnHPChanged        -= RefreshHP;
         _companion.Relationship.OnUnpaidChanged    -= RefreshUnpaid;
         _companion.Relationship.OnBetrayalWarning  -= ShowBetrayalWarning;
         _companion.Relationship.OnRetirementWarning -= ShowRetirementWarning;
         _companion.Inventory.Slots.OnEquipmentChanged -= RefreshEquipment;
-        _companion.Brain.OnStateChanged -= OnBrainStateChanged;
+        _companion.OnBehaviorChanged -= OnBehaviorChanged;
         _companion = null;
     }
 
@@ -68,13 +68,13 @@ public sealed class CompanionCardView : MonoBehaviour
     private void RefreshAll()
     {
         if (_companion == null) return;
-        if (nameText != null) nameText.text = _companion.NPCStats.NPCName;
+        if (nameText != null) nameText.text = _companion.Stats.NPCName;
         RefreshHP();
         RefreshStamina();
-        OnTrustChanged(_companion.NPCStats.Trust);
+        OnTrustChanged(_companion.Stats.Trust);
         RefreshUnpaid(_companion.Relationship.UnpaidAmount);
         RefreshEquipment();
-        OnBrainStateChanged(_companion.Brain.State);
+        OnBehaviorChanged(_companion.Behavior);
     }
 
     private void RefreshHP()
@@ -86,7 +86,7 @@ public sealed class CompanionCardView : MonoBehaviour
     private void RefreshStamina()
     {
         if (staminaBar != null && _companion != null)
-            staminaBar.value = _companion.NPCStats.Stamina / _companion.NPCStats.MaxStamina;
+            staminaBar.value = _companion.Stats.Stamina / _companion.Stats.MaxStamina;
     }
 
     private void OnTrustChanged(float trust)

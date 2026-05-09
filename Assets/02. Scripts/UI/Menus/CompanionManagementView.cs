@@ -24,7 +24,7 @@ public sealed class CompanionManagementView : MonoBehaviour
     [SerializeField] private SettlementView settlementView;
     [SerializeField] private InventoryView  inventoryView;
 
-    private CompanionCharacter _target;
+    private NPCCharacter _target;
 
     void Awake()
     {
@@ -39,7 +39,7 @@ public sealed class CompanionManagementView : MonoBehaviour
         panel.SetActive(false);
     }
 
-    public void Open(CompanionCharacter companion)
+    public void Open(NPCCharacter companion)
     {
         _target = companion;
         Refresh();
@@ -55,8 +55,8 @@ public sealed class CompanionManagementView : MonoBehaviour
     private void Refresh()
     {
         if (_target == null) return;
-        if (nameText   != null) nameText.text   = _target.NPCStats.NPCName;
-        if (trustText  != null) trustText.text  = $"Trust {_target.NPCStats.Trust:F0}";
+        if (nameText   != null) nameText.text   = _target.Stats.NPCName;
+        if (trustText  != null) trustText.text  = $"Trust {_target.Stats.Trust:F0}";
         if (unpaidText != null) unpaidText.text = $"미정산 {_target.Relationship.UnpaidAmount:F0}G";
     }
 
@@ -84,7 +84,7 @@ public sealed class CompanionManagementView : MonoBehaviour
     private void ShowStatus()
     {
         if (_target == null) return;
-        var s = _target.NPCStats;
+        var s = _target.Stats;
         LogManager.AddLog(
             $"[{s.NPCName}] HP:{_target.Health.CurrentHP:F0} Stamina:{s.Stamina:F0} " +
             $"Trust:{s.Trust:F0} Greed:{s.Greed:F0} Fear:{s.Fear:F0} Morality:{s.Morality:F0}"
@@ -95,11 +95,9 @@ public sealed class CompanionManagementView : MonoBehaviour
     private void ToggleWait()
     {
         if (_target == null) { Debug.LogWarning("[ToggleWait] _target is null"); return; }
-        bool isWaiting = _target.Brain.State == CompanionState.Waiting;
-        var newState = isWaiting ? CompanionState.Following : CompanionState.Waiting;
-        Debug.Log($"[ToggleWait] {_target.NPCStats.NPCName} 현재상태={_target.Brain.State} → {newState}");
-        _target.Brain.SetState(newState);
-        LogManager.AddLog($"{_target.NPCStats.NPCName}이(가) {(isWaiting ? "다시 따라온다" : "이 자리에서 대기")}.");
+        bool isWaiting = _target.Behavior == NPCBehavior.Waiting;
+        _target.ToggleWaiting();
+        LogManager.AddLog($"{_target.Stats.NPCName}이(가) {(isWaiting ? "다시 따라온다" : "이 자리에서 대기")}.");
         Close();
     }
 
@@ -118,22 +116,22 @@ public sealed class CompanionManagementView : MonoBehaviour
         if (unpaid > 0f)
         {
             float trustDelta = -5f - (unpaid / 100f);
-            _target.NPCStats.ModifyTrust(trustDelta);
-            LogManager.AddLog($"{_target.NPCStats.NPCName}이(가) 미정산 상태로 떠났다. Trust {trustDelta:F1}");
+            _target.Stats.ModifyTrust(trustDelta);
+            LogManager.AddLog($"{_target.Stats.NPCName}이(가) 미정산 상태로 떠났다. Trust {trustDelta:F1}");
         }
         var captured = _target;
         Close();
         DismissCompanion(captured);
     }
 
-    private static void DismissCompanion(CompanionCharacter companion)
+    private static void DismissCompanion(NPCCharacter companion)
     {
         if (companion == null) return;
-        float trust = companion.NPCStats.Trust;
+        float trust = companion.Stats.Trust;
         if (trust >= 50f) companion.Inventory.ReturnAllToPlayer();
-        else              LogManager.AddLog($"{companion.NPCStats.NPCName}이(가) 장비 일부를 가지고 떠났다.");
+        else              LogManager.AddLog($"{companion.Stats.NPCName}이(가) 장비 일부를 가지고 떠났다.");
 
-        LogManager.AddLog($"{companion.NPCStats.NPCName}을(를) 파티에서 내보냈다.");
+        LogManager.AddLog($"{companion.Stats.NPCName}을(를) 파티에서 내보냈다.");
         PartyRoster.Instance?.RemoveMember(companion);
         Destroy(companion.gameObject);
     }

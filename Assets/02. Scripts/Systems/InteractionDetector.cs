@@ -58,10 +58,12 @@ public sealed class InteractionDetector : MonoBehaviour
         if (clicked == null) return;
         if (!IsInRange(clicked)) return;
 
-        if (clicked is CompanionCharacter companion)
-            companionMenuView?.Open(companion);
-        else if (clicked is WandererCharacter wanderer)
-            wandererMenuView?.Open(wanderer);
+        switch (clicked.Allegiance)
+        {
+            case NPCAllegiance.Companion: companionMenuView?.Open(clicked); break;
+            case NPCAllegiance.Neutral:   wandererMenuView?.Open(clicked);  break;
+            // Hostile은 메뉴 안 열림 (FindNPCAtPosition에서 InteractableMask로 이미 필터됨)
+        }
     }
 
     /// <summary>지정 월드 좌표에 있는 상호작용 가능 NPC를 찾는다 (작은 반경 검색).</summary>
@@ -91,13 +93,11 @@ public sealed class InteractionDetector : MonoBehaviour
     {
         if (npc == null || !npc.Health.IsAlive) return false;
 
-        // 도주/적대 중인 Wanderer 차단
-        if (npc is WandererCharacter w && w.Mode != WandererCharacter.WandererMode.Idle) return false;
+        // 적대 진영은 상호작용 불가
+        if (npc.Allegiance == NPCAllegiance.Hostile) return false;
 
-        // 도주/적대(배신/절도) 중인 Companion 차단
-        if (npc is CompanionCharacter c &&
-            (c.Brain.State == CompanionState.Hostile || c.Brain.State == CompanionState.Fleeing))
-            return false;
+        // 도주 중인 NPC도 상호작용 불가
+        if (npc.Behavior == NPCBehavior.Fleeing) return false;
 
         return true;
     }

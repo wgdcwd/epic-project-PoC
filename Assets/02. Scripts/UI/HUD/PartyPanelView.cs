@@ -9,7 +9,7 @@ public sealed class PartyPanelView : MonoBehaviour
     [SerializeField] private CompanionCardView cardPrefab;
     [SerializeField] private Transform         cardContainer;
 
-    private readonly Dictionary<CompanionCharacter, CompanionCardView> _cards = new();
+    private readonly Dictionary<NPCCharacter, CompanionCardView> _cards = new();
 
     void Start()
     {
@@ -29,7 +29,7 @@ public sealed class PartyPanelView : MonoBehaviour
         PartyRoster.Instance.OnMemberRemoved -= RemoveCard;
     }
 
-    private void AddCard(CompanionCharacter companion)
+    private void AddCard(NPCCharacter companion)
     {
         if (_cards.ContainsKey(companion)) return;
         var card = Instantiate(cardPrefab, cardContainer);
@@ -37,7 +37,7 @@ public sealed class PartyPanelView : MonoBehaviour
         _cards[companion] = card;
     }
 
-    private void RemoveCard(CompanionCharacter companion)
+    private void RemoveCard(NPCCharacter companion)
     {
         if (!_cards.TryGetValue(companion, out var card)) return;
         card.Unbind();

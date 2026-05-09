@@ -8956,6 +8956,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1011626193069034902, guid: 2222d546586a26b48af91de131beb5c3, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1011626193069034902, guid: 2222d546586a26b48af91de131beb5c3, type: 3}
+      propertyPath: m_Size.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1329468481138942672, guid: 2222d546586a26b48af91de131beb5c3, type: 3}
+      propertyPath: goldScalePerGold
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 1329468481138942672, guid: 2222d546586a26b48af91de131beb5c3, type: 3}
+      propertyPath: goldScaleMaxBonus
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 2301236711410112693, guid: 2222d546586a26b48af91de131beb5c3, type: 3}
       propertyPath: m_Name
       value: Player

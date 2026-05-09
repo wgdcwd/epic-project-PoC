@@ -17,7 +17,9 @@ GameObject:
   - component: {fileID: 6975750736998149960}
   - component: {fileID: 2532532780832664987}
   - component: {fileID: 8721858770497224657}
-  - component: {fileID: 7915368892569689799}
+  - component: {fileID: 5993928199377943868}
+  - component: {fileID: 6307749570912001237}
+  - component: {fileID: 4355749786500716149}
   m_Layer: 9
   m_Name: WandererNPC
   m_TagString: Untagged
@@ -103,7 +105,7 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.5, y: 1}
+  m_Size: {x: 1, y: 2}
   m_Direction: 0
 --- !u!114 &5607930261412966600
 MonoBehaviour:
@@ -138,6 +140,8 @@ MonoBehaviour:
   greed: 50
   fear: 50
   morality: 50
+  randomizeOnSpawn: 0
+  gold: 0
 --- !u!114 &6223050495931917767
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,7 +196,7 @@ MonoBehaviour:
   damage: 10
   speed: 10
   ownerType: 1
---- !u!114 &7915368892569689799
+--- !u!114 &5993928199377943868
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -201,9 +205,64 @@ MonoBehaviour:
   m_GameObject: {fileID: 2534057180545617778}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbab4554f2b998f4badf3914ec42ea74, type: 3}
+  m_Script: {fileID: 11500000, guid: 1ff0137299f6a69428ec86224301686f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WandererCharacter
+  m_EditorClassIdentifier: Assembly-CSharp::CompanionRelationship
+--- !u!114 &6307749570912001237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2534057180545617778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f7facb1b5ad0714f96eaff1f1665a73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CompanionReaction
+--- !u!114 &4355749786500716149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2534057180545617778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ada185848c5d1042b9d668e4ec69a7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCCharacter
+  followDistance: 2
+  companionAttackRadius: 7
+  companionMoveSpeed: 4.5
+  separationDistance: 1.5
+  separationStrength: 3.5
+  wanderRadius: 3
+  wanderIntervalRange: {x: 3, y: 7}
+  wanderSpeed: 1.5
+  enemyDetectRadius: 7
+  idleAttackRadius: 6
+  idleAttackChaseSpeed: 2.5
+  fearKeepThreshold: 70
+  keepAwayDistance: 4
+  keepAwaySpeed: 2.2
+  keepAwayWarningCooldown: 5
+  aggressionDetectRange: 6
+  aggressionThreshold: 110
+  aggressionCheckInterval: 2
+  pickupSearchRadius: 8
+  pickupCollectRadius: 0.7
+  pickupChaseSpeed: 2.2
+  chatterIntervalRange: {x: 8, y: 18}
+  hostileAttackRadius: 7
+  hostileMoveSpeed: 3
+  hostileFearThreshold: 60
+  fleeSpeed: 4
+  fleeStopDistance: 12
+  companionTint: {r: 0.65, g: 1, b: 0.7, a: 1}
+  hostileTint: {r: 1, g: 0.55, b: 0.55, a: 1}
+  goldScalePerGold: 0.05
+  goldScaleMaxBonus: 2
 --- !u!1 &2902792152082516730
 GameObject:
   m_ObjectHideFlags: 0

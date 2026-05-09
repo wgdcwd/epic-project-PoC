@@ -21,7 +21,7 @@ public sealed class SettlementView : MonoBehaviour
     [SerializeField] private Button confirmBtn;
     [SerializeField] private Button cancelBtn;
 
-    private CompanionCharacter _target;
+    private NPCCharacter _target;
     private System.Action      _onClosed;
 
     void Awake()
@@ -38,7 +38,7 @@ public sealed class SettlementView : MonoBehaviour
 
     // ── 진입점 ────────────────────────────────────────────
 
-    public void Open(CompanionCharacter companion, System.Action onClosed = null)
+    public void Open(NPCCharacter companion, System.Action onClosed = null)
     {
         _target   = companion;
         _onClosed = onClosed;
@@ -115,8 +115,8 @@ public sealed class SettlementView : MonoBehaviour
         }
 
         float ratio = paid / unpaid;
-        float delta = SettlementSystem.CalculateTrustDelta(ratio, _target.NPCStats.Greed);
-        string name = _target.NPCStats.NPCName;
+        float delta = SettlementSystem.CalculateTrustDelta(ratio, _target.Stats.Greed);
+        string name = _target.Stats.NPCName;
 
         string label = ClassifyReaction(delta, name);
         string sign  = delta >= 0f ? "+" : "";
@@ -162,7 +162,7 @@ public sealed class SettlementView : MonoBehaviour
         string sign = delta >= 0f ? "+" : "";
 
         if (resultText != null) resultText.text = $"정산 완료. Trust {sign}{delta:F1}";
-        LogManager.AddLog($"{_target.NPCStats.NPCName}에게 {amount}G 정산. Trust {sign}{delta:F1}");
+        LogManager.AddLog($"{_target.Stats.NPCName}에게 {amount}G 정산. Trust {sign}{delta:F1}");
 
         // 한 번 정산하면 미정산금은 0으로 클리어되므로 자동으로 닫는다.
         Close();

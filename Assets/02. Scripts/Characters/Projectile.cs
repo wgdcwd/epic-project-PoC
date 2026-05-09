@@ -61,8 +61,9 @@ public sealed class Projectile : MonoBehaviour
         // 동료가 플레이어 투사체에 맞으면 Trust 감소 처리
         if (_owner == ProjectileOwner.Player)
         {
-            var companion = other.GetComponent<CompanionCharacter>();
-            companion?.Relationship.OnHitByPlayer(_damage);
+            var npc = other.GetComponent<NPCCharacter>();
+            if (npc != null && npc.Allegiance == NPCAllegiance.Companion)
+                npc.Relationship.OnHitByPlayer(_damage);
         }
 
         Destroy(gameObject);

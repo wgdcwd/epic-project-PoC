@@ -18,7 +18,7 @@ public sealed class InventoryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI  titleText;
     [SerializeField] private Button           cancelBtn;
 
-    private CompanionCharacter _target;
+    private NPCCharacter _target;
     private Mode               _mode;
     private Action             _onClose;
 
@@ -28,22 +28,22 @@ public sealed class InventoryView : MonoBehaviour
         panel.SetActive(false);
     }
 
-    public void OpenLend(CompanionCharacter companion, Action onClose = null)
+    public void OpenLend(NPCCharacter companion, Action onClose = null)
     {
         _target  = companion;
         _mode    = Mode.LendToNPC;
         _onClose = onClose;
-        if (titleText != null) titleText.text = $"{companion.NPCStats.NPCName}에게 대여할 장비 선택";
+        if (titleText != null) titleText.text = $"{companion.Stats.NPCName}에게 대여할 장비 선택";
         PopulateSlots();
         panel.SetActive(true);
     }
 
-    public void OpenRetrieve(CompanionCharacter companion, Action onClose = null)
+    public void OpenRetrieve(NPCCharacter companion, Action onClose = null)
     {
         _target  = companion;
         _mode    = Mode.RetrieveFromNPC;
         _onClose = onClose;
-        if (titleText != null) titleText.text = $"{companion.NPCStats.NPCName}에게서 회수할 장비 선택";
+        if (titleText != null) titleText.text = $"{companion.Stats.NPCName}에게서 회수할 장비 선택";
         PopulateSlots();
         panel.SetActive(true);
     }
@@ -100,7 +100,7 @@ public sealed class InventoryView : MonoBehaviour
         if (success)
         {
             string action = _mode == Mode.LendToNPC ? "대여" : "회수";
-            LogManager.AddLog($"{_target.NPCStats.NPCName}에게 {item.itemName} {action}.");
+            LogManager.AddLog($"{_target.Stats.NPCName}에게 {item.itemName} {action}.");
         }
 
         Close();

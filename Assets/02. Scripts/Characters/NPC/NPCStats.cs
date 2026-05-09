@@ -2,8 +2,8 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// NPC 성향 스탯. CompanionCharacter와 WandererCharacter 모두 사용.
-/// 모든 값은 0~100 범위.
+/// NPC 성향 스탯. NPCCharacter가 사용 (Wanderer/Companion/Hostile 모두 동일).
+/// 모든 성향 값은 0~100 범위.
 /// </summary>
 public sealed class NPCStats : MonoBehaviour
 {
@@ -45,14 +45,20 @@ public sealed class NPCStats : MonoBehaviour
 
     // 장비 보정
     public float BonusATK    { get; set; }
-    public float FinalATK    => (baseATK + BonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
 
     [Header("Wallet")]
     [SerializeField] private int gold = 0;
     public int Gold => gold;
 
+    // 보유 골드에 비례한 스탯 보너스 (상점 대용)
+    public float GoldBonusATK => gold / 100f;
+    public float GoldBonusHP  => gold / 20f;
+
+    public float FinalATK    => (baseATK + BonusATK + GoldBonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
+
     public event Action<float> OnTrustChanged;   // newTrust
     public event Action        OnStaminaChanged;
+    public event Action        OnGoldChanged;
 
     void Awake()
     {
@@ -94,12 +100,14 @@ public sealed class NPCStats : MonoBehaviour
     {
         if (amount <= 0) return;
         gold += amount;
+        OnGoldChanged?.Invoke();
     }
 
     public bool SpendGold(int amount)
     {
         if (amount < 0 || gold < amount) return false;
         gold -= amount;
+        OnGoldChanged?.Invoke();
         return true;
     }
 
@@ -108,6 +116,7 @@ public sealed class NPCStats : MonoBehaviour
     {
         int g = gold;
         gold = 0;
+        OnGoldChanged?.Invoke();
         return g;
     }
 }
