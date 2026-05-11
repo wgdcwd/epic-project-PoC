@@ -68,28 +68,6 @@ public sealed class CompanionReaction : MonoBehaviour
         TryBubble(PickRandom("좀 쉬어야 해.", "이 상태로는 못 싸워."));
     }
 
-    public void TriggerEquipmentLent()
-    {
-        TryLog(PickRandom(
-            $"{_stats.NPCName}이(가) 받은 장비를 살펴본다.",
-            $"{_stats.NPCName}이(가) 장비를 챙겨 넣는다."
-        ));
-        TryBubble(PickRandom("일단 맡아두지.", "필요하면 쓰겠어."));
-    }
-
-    public void TriggerEquipmentRetrieved(bool wasEquipped, bool isDanger)
-    {
-        if (!wasEquipped && !isDanger) return;
-
-        TryLog(PickRandom(
-            $"{_stats.NPCName}이(가) 아쉬운 듯 장비를 바라본다.",
-            $"{_stats.NPCName}이(가) 불안한 표정을 짓는다."
-        ));
-        TryBubble(PickRandom("지금 가져간다고?", "그거 없으면 좀 불안한데."));
-
-        GetComponent<CompanionRelationship>()?.AddComplaintScore(5);
-    }
-
     public void TriggerBetrayalWarning()
     {
         TryLog($"{_stats.NPCName}의 눈빛이 싸늘해졌다.");

@@ -5,14 +5,13 @@ using UnityEngine.EventSystems;
 /// 플레이어 파사드. 입력 → 이동/발사/상호작용으로 연결.
 /// </summary>
 [RequireComponent(typeof(PlayerInputHandler), typeof(PlayerMovement), typeof(PlayerStats))]
-[RequireComponent(typeof(Shooter), typeof(StaminaSystem), typeof(PlayerInventory))]
+[RequireComponent(typeof(Shooter), typeof(StaminaSystem))]
 [RequireComponent(typeof(InteractionDetector))]
 public sealed class PlayerCharacter : CharacterBase
 {
     public static PlayerCharacter Instance { get; private set; }
 
     public PlayerStats        Stats     { get; private set; }
-    public PlayerInventory    Inventory { get; private set; }
     public InteractionDetector Detector { get; private set; }
 
     [Header("Wealth Visual")]
@@ -33,7 +32,6 @@ public sealed class PlayerCharacter : CharacterBase
         base.Awake();
         Team      = CharacterTeam.Player;
         Stats     = GetComponent<PlayerStats>();
-        Inventory = GetComponent<PlayerInventory>();
         _shooter  = GetComponent<Shooter>();
         _input    = GetComponent<PlayerInputHandler>();
         _stamina  = GetComponent<StaminaSystem>();

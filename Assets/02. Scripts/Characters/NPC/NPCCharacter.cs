@@ -11,7 +11,7 @@ public enum NPCBehavior   { Idle, Following, Waiting, Fleeing, Engaging }
 /// - AI / 행동 / visual / 이탈 처리를 모두 한 곳에서 처리
 /// - 영입은 컴포넌트 추가/제거 없이 JoinAsCompanion 호출만으로 처리
 /// </summary>
-[RequireComponent(typeof(NPCStats), typeof(NPCInventory), typeof(StaminaSystem))]
+[RequireComponent(typeof(NPCStats), typeof(StaminaSystem))]
 [RequireComponent(typeof(Rigidbody2D), typeof(Shooter))]
 [RequireComponent(typeof(CompanionRelationship), typeof(CompanionReaction))]
 public sealed class NPCCharacter : CharacterBase
@@ -27,7 +27,6 @@ public sealed class NPCCharacter : CharacterBase
     // ── 컴포넌트 ──────────────────────────────────────────
 
     public NPCStats              Stats        { get; private set; }
-    public NPCInventory          Inventory    { get; private set; }
     public CompanionRelationship Relationship { get; private set; }
     public CompanionReaction     Reaction     { get; private set; }
     public Shooter               Shooter      { get; private set; }
@@ -133,7 +132,6 @@ public sealed class NPCCharacter : CharacterBase
         base.Awake();
         Team         = CharacterTeam.Neutral;
         Stats        = GetComponent<NPCStats>();
-        Inventory    = GetComponent<NPCInventory>();
         Relationship = GetComponent<CompanionRelationship>();
         Reaction     = GetComponent<CompanionReaction>();
         Shooter      = GetComponent<Shooter>();
@@ -589,8 +587,7 @@ public sealed class NPCCharacter : CharacterBase
         {
             switch (nearest)
             {
-                case GoldPickup gp:      gp.TryPickupBy(Stats);     break;
-                case EquipmentPickup ep: ep.TryPickupBy(Inventory); break;
+                case GoldPickup gp: gp.TryPickupBy(Stats); break;
             }
             return true;
         }
@@ -672,7 +669,7 @@ public sealed class NPCCharacter : CharacterBase
         if (Allegiance == NPCAllegiance.Companion)
             PartyRoster.Instance?.RemoveMember(this);
 
-        NPCDropHandler.HandleDrop(Stats, Inventory, transform.position);
+        NPCDropHandler.HandleDrop(Stats, transform.position);
         Destroy(gameObject);
     }
 
@@ -718,16 +715,8 @@ public sealed class NPCCharacter : CharacterBase
     private void HandleRetirement()
     {
         string name = Stats.NPCName;
-        if (Stats.Trust >= 50f)
-        {
-            LogManager.AddLog($"{name}이(가) 장비를 돌려주고 떠났다.");
-            Inventory.ReturnAllToPlayer();
-        }
-        else
-        {
-            LogManager.AddLog($"{name}이(가) 장비 일부를 들고 떠났다.");
-        }
         BubbleManager.ShowBubble(transform, "이만 가볼게.");
+        LogManager.AddLog($"{name}이(가) 파티를 떠났다.");
         PartyRoster.Instance?.RemoveMember(this);
         Destroy(gameObject, 0.5f);
     }
@@ -748,9 +737,8 @@ public sealed class NPCCharacter : CharacterBase
             }
         }
 
-        int itemCount = Inventory.Slots.Inventory.Count;
         BubbleManager.ShowBubble(transform, "잘 챙겨갈게.");
-        LogManager.AddLog($"{name}이(가) {stolenGold}G와 장비 {itemCount}개를 들고 도망쳤다!");
+        LogManager.AddLog($"{name}이(가) {stolenGold}G를 들고 도망쳤다!");
 
         // 적대 진영으로 전환 (다시 영입/메뉴 차단)
         if (Allegiance == NPCAllegiance.Companion)
@@ -799,18 +787,6 @@ public sealed class NPCCharacter : CharacterBase
             Reaction.TriggerLowStamina();
         }
         _prevStamina = stamina;
-    }
-
-    // ────────────────────────────────────────────────────
-    // Companion 외부 명령 (UI에서 호출)
-    // ────────────────────────────────────────────────────
-
-    public void ToggleWaiting()
-    {
-        if (Allegiance != NPCAllegiance.Companion) return;
-        SetBehavior(Behavior == NPCBehavior.Waiting
-            ? NPCBehavior.Following
-            : NPCBehavior.Waiting);
     }
 
     private static string PickRandom(string[] arr)

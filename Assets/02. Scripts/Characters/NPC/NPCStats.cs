@@ -43,9 +43,6 @@ public sealed class NPCStats : MonoBehaviour
     public float Morality => morality;
     public float Stamina  { get; private set; }
 
-    // 장비 보정
-    public float BonusATK    { get; set; }
-
     [Header("Wallet")]
     [SerializeField] private int gold = 0;
     public int Gold => gold;
@@ -54,7 +51,7 @@ public sealed class NPCStats : MonoBehaviour
     public float GoldBonusATK => gold / 100f;
     public float GoldBonusHP  => gold / 20f;
 
-    public float FinalATK    => (baseATK + BonusATK + GoldBonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
+    public float FinalATK    => (baseATK + GoldBonusATK) * StaminaSystem.GetATKMultiplier(Stamina);
 
     public event Action<float> OnTrustChanged;   // newTrust
     public event Action        OnStaminaChanged;

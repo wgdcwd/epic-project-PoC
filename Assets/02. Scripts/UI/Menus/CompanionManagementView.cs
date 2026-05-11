@@ -3,7 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 동료 관리창: 정산, 장비 대여/회수, 상태 확인, 대기 지시, 내보내기.
+/// 동료 관리창: 상태 확인, 내보내기.
+/// - 정산: 스테이지 클리어 시 강제 페이즈로 처리 (이 창에서 제거)
+/// - 정산 후 내보내기: 제거
+/// - 대기 지시: 제거
 /// </summary>
 public sealed class CompanionManagementView : MonoBehaviour
 {
@@ -12,30 +15,17 @@ public sealed class CompanionManagementView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI  trustText;
     [SerializeField] private TextMeshProUGUI  unpaidText;
 
-    [SerializeField] private Button settleBtn;
-    [SerializeField] private Button lendBtn;
-    [SerializeField] private Button retrieveBtn;
     [SerializeField] private Button statusBtn;
-    [SerializeField] private Button waitBtn;
-    [SerializeField] private Button dismissWithSettleBtn;
     [SerializeField] private Button dismissBtn;
     [SerializeField] private Button closeBtn;
-
-    [SerializeField] private SettlementView settlementView;
-    [SerializeField] private InventoryView  inventoryView;
 
     private NPCCharacter _target;
 
     void Awake()
     {
-        settleBtn            .onClick.AddListener(OpenSettle);
-        lendBtn              .onClick.AddListener(OpenLend);
-        retrieveBtn          .onClick.AddListener(OpenRetrieve);
-        statusBtn            .onClick.AddListener(ShowStatus);
-        waitBtn              .onClick.AddListener(ToggleWait);
-        dismissWithSettleBtn .onClick.AddListener(DismissWithSettle);
-        dismissBtn           .onClick.AddListener(DismissDirectly);
-        closeBtn             .onClick.AddListener(Close);
+        statusBtn  .onClick.AddListener(ShowStatus);
+        dismissBtn .onClick.AddListener(DismissDirectly);
+        closeBtn   .onClick.AddListener(Close);
         panel.SetActive(false);
     }
 
@@ -60,27 +50,6 @@ public sealed class CompanionManagementView : MonoBehaviour
         if (unpaidText != null) unpaidText.text = $"미정산 {_target.Relationship.UnpaidAmount:F0}G";
     }
 
-    private void OpenSettle()
-    {
-        if (_target == null) return;
-        settlementView?.Open(_target);
-        Close();
-    }
-
-    private void OpenLend()
-    {
-        if (_target == null) return;
-        inventoryView?.OpenLend(_target, null);
-        Close();
-    }
-
-    private void OpenRetrieve()
-    {
-        if (_target == null) return;
-        inventoryView?.OpenRetrieve(_target, null);
-        Close();
-    }
-
     private void ShowStatus()
     {
         if (_target == null) return;
@@ -92,47 +61,13 @@ public sealed class CompanionManagementView : MonoBehaviour
         Close();
     }
 
-    private void ToggleWait()
-    {
-        if (_target == null) { Debug.LogWarning("[ToggleWait] _target is null"); return; }
-        bool isWaiting = _target.Behavior == NPCBehavior.Waiting;
-        _target.ToggleWaiting();
-        LogManager.AddLog($"{_target.Stats.NPCName}이(가) {(isWaiting ? "다시 따라온다" : "이 자리에서 대기")}.");
-        Close();
-    }
-
-    private void DismissWithSettle()
-    {
-        if (_target == null) return;
-        var captured = _target;     // 정산창 닫힐 때 사용할 참조 캡처
-        Close();                    // 관리창은 먼저 닫고
-        settlementView?.Open(captured, () => DismissCompanion(captured));
-    }
-
     private void DismissDirectly()
     {
         if (_target == null) return;
-        float unpaid = _target.Relationship.UnpaidAmount;
-        if (unpaid > 0f)
-        {
-            float trustDelta = -5f - (unpaid / 100f);
-            _target.Stats.ModifyTrust(trustDelta);
-            LogManager.AddLog($"{_target.Stats.NPCName}이(가) 미정산 상태로 떠났다. Trust {trustDelta:F1}");
-        }
         var captured = _target;
         Close();
-        DismissCompanion(captured);
-    }
-
-    private static void DismissCompanion(NPCCharacter companion)
-    {
-        if (companion == null) return;
-        float trust = companion.Stats.Trust;
-        if (trust >= 50f) companion.Inventory.ReturnAllToPlayer();
-        else              LogManager.AddLog($"{companion.Stats.NPCName}이(가) 장비 일부를 가지고 떠났다.");
-
-        LogManager.AddLog($"{companion.Stats.NPCName}을(를) 파티에서 내보냈다.");
-        PartyRoster.Instance?.RemoveMember(companion);
-        Destroy(companion.gameObject);
+        LogManager.AddLog($"{captured.Stats.NPCName}을(를) 파티에서 내보냈다.");
+        PartyRoster.Instance?.RemoveMember(captured);
+        Destroy(captured.gameObject);
     }
 }
