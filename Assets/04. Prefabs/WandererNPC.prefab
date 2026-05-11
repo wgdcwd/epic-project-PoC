@@ -13,8 +13,6 @@ GameObject:
   - component: {fileID: 2575661750065241508}
   - component: {fileID: 5607930261412966600}
   - component: {fileID: 284535761560026147}
-  - component: {fileID: 6223050495931917767}
-  - component: {fileID: 6975750736998149960}
   - component: {fileID: 2532532780832664987}
   - component: {fileID: 8721858770497224657}
   - component: {fileID: 5993928199377943868}
@@ -142,30 +140,6 @@ MonoBehaviour:
   morality: 50
   randomizeOnSpawn: 0
   gold: 0
---- !u!114 &6223050495931917767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2534057180545617778}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1af1f503d17d71f48b9756af369c5c69, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EquipmentSlots
---- !u!114 &6975750736998149960
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2534057180545617778}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 488e9f01c54afbe41879424bdabf5a36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NPCInventory
 --- !u!114 &2532532780832664987
 MonoBehaviour:
   m_ObjectHideFlags: 0

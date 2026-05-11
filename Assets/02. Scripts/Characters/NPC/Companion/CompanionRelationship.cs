@@ -99,6 +99,13 @@ public sealed class CompanionRelationship : MonoBehaviour
         _hasComplaintFlag      = true;
     }
 
+    /// <summary>미정산금을 강제로 0으로 클리어 (플레이어 절도 등).</summary>
+    public void ClearUnpaid()
+    {
+        UnpaidAmount = 0f;
+        OnUnpaidChanged?.Invoke(UnpaidAmount);
+    }
+
     public void ClearComplaintFlag()
     {
         _recentComplaintScore = 0;

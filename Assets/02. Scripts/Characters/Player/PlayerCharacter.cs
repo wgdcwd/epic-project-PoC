@@ -49,7 +49,6 @@ public sealed class PlayerCharacter : CharacterBase
     {
         _input.OnFirePressed     += HandleFire;
         _input.OnInteractPressed += HandleInteract;
-        _input.OnRestPressed     += HandleRest;
         Health.OnDied            += HandlePlayerDied;
         Health.OnDamaged         += HandlePlayerDamaged;
         Stats.OnGoldChanged      += OnGoldChanged;
@@ -60,7 +59,6 @@ public sealed class PlayerCharacter : CharacterBase
     {
         _input.OnFirePressed     -= HandleFire;
         _input.OnInteractPressed -= HandleInteract;
-        _input.OnRestPressed     -= HandleRest;
         Health.OnDied            -= HandlePlayerDied;
         Health.OnDamaged         -= HandlePlayerDamaged;
         Stats.OnGoldChanged      -= OnGoldChanged;
@@ -124,12 +122,6 @@ public sealed class PlayerCharacter : CharacterBase
         if (!CanAct()) return;
         if (IsPointerOverUI()) return;        // UI 위 우클릭도 차단
         Detector?.TryInteract(worldPos);
-    }
-
-    private void HandleRest()
-    {
-        if (!CanAct()) return;
-        RestSystem.Instance?.TryRest();
     }
 
     /// <summary>게임 진행 중 + 휴식 중 아님</summary>

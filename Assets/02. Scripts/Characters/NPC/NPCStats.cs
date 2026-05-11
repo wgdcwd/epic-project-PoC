@@ -2,6 +2,17 @@ using System;
 using UnityEngine;
 
 /// <summary>
+/// 야영 중 NPC의 수면 행동.
+/// CampSystem이 NPC 불침번 턴에서 설정하고, 절도 탐지 확률 계산에 사용된다.
+/// </summary>
+public enum NpcSleepMode
+{
+    Comfy,  // 편하게 취침 — 탐지 불가
+    Alert,  // 경계하며 취침 — 50% 탐지
+    Awake   // 취침하지 않기 — 100% 탐지
+}
+
+/// <summary>
 /// NPC 성향 스탯. NPCCharacter가 사용 (Wanderer/Companion/Hostile 모두 동일).
 /// 모든 성향 값은 0~100 범위.
 /// </summary>
@@ -42,6 +53,10 @@ public sealed class NPCStats : MonoBehaviour
     public float Fear     => fear;
     public float Morality => morality;
     public float Stamina  { get; private set; }
+
+    // ── 야영 수면 상태 (CampSystem이 매 야영마다 설정) ──────
+    /// <summary>이번 야영에서 이 NPC가 선택한 수면 행동.</summary>
+    public NpcSleepMode CampSleepMode { get; set; } = NpcSleepMode.Alert;
 
     [Header("Wallet")]
     [SerializeField] private int gold = 0;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum NPCAllegiance { Neutral, Companion, Hostile }
-public enum NPCBehavior   { Idle, Following, Waiting, Fleeing, Engaging }
+public enum NPCBehavior   { Idle, Following, Waiting, Fleeing, Engaging, SleepingHostile }
 
 /// <summary>
 /// 모든 NPC를 다루는 단일 클래스.
@@ -268,7 +268,7 @@ public sealed class NPCCharacter : CharacterBase
             _fleeDirection = UnityEngine.Random.insideUnitCircle.normalized;
     }
 
-    private void SetAllegiance(NPCAllegiance newValue)
+    public void SetAllegiance(NPCAllegiance newValue)
     {
         if (Allegiance == newValue) return;
         Allegiance = newValue;
@@ -431,7 +431,8 @@ public sealed class NPCCharacter : CharacterBase
 
     private void TickHostile()
     {
-        if (Behavior == NPCBehavior.Fleeing) { TickFleeing(); return; }
+        if (Behavior == NPCBehavior.Fleeing)        { TickFleeing(); return; }
+        if (Behavior == NPCBehavior.SleepingHostile) { _rb.linearVelocity = Vector2.zero; return; } // 자는 중 — 피격전까지 정지
 
         var player = PlayerCharacter.Instance;
         if (player == null) return;
@@ -787,6 +788,60 @@ public sealed class NPCCharacter : CharacterBase
             Reaction.TriggerLowStamina();
         }
         _prevStamina = stamina;
+    }
+
+    // ────────────────────────────────────────────────────
+    // 야영 기습/절도 전용 공개 메서드
+    // ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 기습 시 호출. Hostile 진영으로 전환하되 SleepingHostile 상태로 대기.
+    /// wakesImmediately=true면 즉시 Engaging으로 전환.
+    /// wakesImmediately=false면 피격 시에만 깨어남.
+    /// </summary>
+    public void EnterSleepingHostile(bool wakesImmediately)
+    {
+        // 파티에서 이미 제거된 상태로 호출됨
+        SetAllegiance(NPCAllegiance.Hostile);
+
+        if (wakesImmediately)
+        {
+            SetBehavior(NPCBehavior.Engaging);
+        }
+        else
+        {
+            // 수면 상태: 피격 전까지 움직이지 않음
+            SetBehavior(NPCBehavior.SleepingHostile);
+            // 피격 이벤트 구독 (한 번만)
+            Health.OnDamaged += OnHitWhileSleeping;
+        }
+    }
+
+    private void OnHitWhileSleeping(float amount, GameObject attacker)
+    {
+        if (Behavior != NPCBehavior.SleepingHostile) return;
+        Health.OnDamaged -= OnHitWhileSleeping;
+        BubbleManager.ShowBubble(transform, "뭐야, 배신이야?!");
+        LogManager.AddLog($"{Stats.NPCName}이(가) 공격을 받고 깨어났다!");
+        SetBehavior(NPCBehavior.Engaging);
+    }
+
+    /// <summary>
+    /// 절도 탐지 시 호출. Fear에 따라 도주 또는 즉시 공격.
+    /// </summary>
+    public void BecomeHostileFromCamp()
+    {
+        SetAllegiance(NPCAllegiance.Hostile);
+        if (Stats.Fear >= 60f)
+        {
+            BubbleManager.ShowBubble(transform, "도둑이야! 달아나!");
+            StartFleeing(PlayerCharacter.Instance != null ? PlayerCharacter.Instance.gameObject : null);
+        }
+        else
+        {
+            BubbleManager.ShowBubble(transform, "도둑놈!");
+            SetBehavior(NPCBehavior.Engaging);
+        }
     }
 
     private static string PickRandom(string[] arr)
